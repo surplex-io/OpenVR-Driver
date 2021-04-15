@@ -1,32 +1,50 @@
-# Simple OpenVR Driver Tutorial
-I created this driver as a demonstration for how to write some of the most common things a SteamVR/OpenVR driver would want to do. You will need to understand C++11 and some C++17 features at least to make the most use of this repo. It features:
+# Websocket OpenVR Driver Tutorial
 
-- [Central driver setup](driver_files/src/Driver/IVRDriver.hpp)
-to manage addition and removal of devices, and updating devices each frame, collecting events, access to OpenVR internals, etc...
+This is an adaptation of the repository authored by terminal29, "Simple-OpenVR-Driver-Tutorial"
 
-- [Reading configuration files](driver_files/src/Driver/VRDriver.cpp#L114)
-to load user settings 
+The aim of this repository is to give the end user a driver that hosts a local websocket server on their computer which they can connect to and spawn trackers in VR using simple JSON.
 
-- [Logging](driver_files/src/Driver/VRDriver.cpp#L142)
-for simple debug messages
+This is desirable as it allows simple Python or JavaScript applications to interface with SteamVR and create trackers.
+This means you can write simple Python code to, for example, emulate a hip tracker using neural networks and a webcam and easily add it to SteamVR.
 
-- [Tracked HMD](driver_files/src/Driver/HMDDevice.hpp)
-which is a tracked device that acts as a video output
+# Websocket server
+The websocket server can be connected to at:
+`ws://127.0.0.1:8082`
 
-- [Tracked Controllers](driver_files/src/Driver/ControllerDevice.hpp)
-which is a tracked device that has mapped buttons, triggers, touchpads, joysticks, etc...
+And commands are sent using JSON in the format:
+`{"id":"tracker_0","x":0,"y":1,"z":2}`
 
-- [Tracked Trackers](driver_files/src/Driver/TrackerDevice.hpp)
-which is a device purely meant for tracking the location of an object
+Where the following are valid keys:
+- id (String - Required)
+	- Unique name of the tracker, if no tracker exists with the id a new tracker is created. For all intents and purposes there is no limit on the number that can be spawned.
+- x,y,z (Numeric - Optional - default 0)
+	- Position in 3D space from origin in metres
+- rx,ry,rz,rw (Numeric - Optional - default 0)
+	- Rotation in 3D space 
+- connected (Boolean - Optional - default true)
+	- Set to true/false to enable/disable the tracker
+	
+If a key is omitted the value will not be changed from the previous update.
 
-- [Tracking References (base stations)](driver_files/src/Driver/TrackingReferenceDevice.hpp)
-which is a base station or camera designed as a fixed point of reference to the real world
+Commands can be stacked in a JSON array as follows (there should be no limit on how many can be added):
+`[{"id":"tracker_0","x":0,"y":1,"z":2}, {"id":"tracker_1","x":0,"y":1,"z":2}]`
 
-- [Custom Device Render Models](driver_files/driver/example/resources/rendermodels/example_controller)
-so your new controllers look cool
+If a command contains invalid JSON the whole command is ignored.
 
-- [Visual Studio Debugging Setup for SteamVR](#debugging)
-because a debugger is a developers best friend <sup>(besides ctrl-z)</sup>.
+## Testing
+
+If you would like to test this out, please do the following.
+
+- Install the driver (from the releases or build it yourself using below instructions)
+- Start SteamVR and connect a headset
+- Navigate to https://www.websocket.org/echo.html
+- Set location to:
+	- `ws://127.0.0.1:8082`
+- Press connect
+- Set message to:
+	- `{"id":"tracker_0","x":1,"y":1,"z":1}`
+- Press send
+- In the SteamVR UI you should now see a tracker icon, and within SteamVR there should be a tracker shown (it may show as a controller model)
 
 ## Building
 - Clone the project and submodules
@@ -38,7 +56,7 @@ because a debugger is a developers best friend <sup>(besides ctrl-z)</sup>.
 	
 ## Installation
 
-There are two ways to "install" your plugin:
+There are two ways to "install" your plugin (The first one is recommended):
 
 - Find your SteamVR driver directory, which should be at:
   `C:\Program Files (x86)\Steam\steamapps\common\SteamVR\drivers`
@@ -73,24 +91,6 @@ or
 	"version" : 1
 }
 ```
-
-## Debugging
-Debugging SteamVR is not as simple as it seems because of the startup procedure it uses. The SteamVR ecosystem consists of a couple programs:
-
- - **vrserver**: the driver host
- - **vrcompositor**: the render engine
- - **vrmonitor**: the popup that displays status information
- - **vrdashboard**: the VR menu/overlay
- - **vrstartup**: a program to start everything up
- 
- To debug effectively in Visual Studio, you can use an extension called [Microsoft Child Process Debugging Power Tool](https://marketplace.visualstudio.com/items?itemName=vsdbgplat.MicrosoftChildProcessDebuggingPowerTool) and enable debugging child processes, disable debugging for all other child processes, and add `vrserver.exe` as a child process to debug as below:
-  
-![Child process debugging settings](https://i.imgur.com/yDNvLMm.png)
-
-Set the program the project should run in debug mode to **vrstartup** (Usually located `C:\Program Files (x86)\Steam\steamapps\common\SteamVR\bin\win64\vrstartup.exe`). Now we can start up SteamVR without needing to go through Steam, and can properly startup all the other programs vrserver needs. 
-
-## Issues
-I don't have an issue template, but if you find what you think is a bug, and can describe how to reproduce it, please leave an issue and/or pull request with the details.
 
 ## License
 MIT License
