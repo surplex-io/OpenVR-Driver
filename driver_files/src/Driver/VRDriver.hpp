@@ -34,12 +34,18 @@ namespace ExampleDriver {
         virtual void LeaveStandby() override;
         virtual ~VRDriver() = default;
 
+		virtual const std::vector<std::string>& GetDeviceSerials() const override;
+		virtual const std::vector<std::string>& GetDeviceNames() const override;
+		virtual const std::vector<vr::DriverPose_t>& GetAllPoses() const override;
     private:
         std::vector<std::shared_ptr<IVRDevice>> devices_;
         std::vector<vr::VREvent_t> openvr_events_;
         std::chrono::milliseconds frame_timing_ = std::chrono::milliseconds(16);
         std::chrono::system_clock::time_point last_frame_time_ = std::chrono::system_clock::now();
         std::string settings_key_ = "driver_example";
-
+		
+		std::vector<std::string> device_serials;
+		std::vector<std::string> device_names;
+		std::vector<vr::DriverPose_t> device_poses;
     };
 };

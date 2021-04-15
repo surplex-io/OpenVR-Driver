@@ -74,6 +74,9 @@ namespace ExampleDriver {
 
         virtual ~IVRDriver() {}
 
+		virtual const std::vector<std::string>& GetDeviceSerials() const = 0;
+		virtual const std::vector<std::string>& GetDeviceNames() const = 0;
+		virtual const std::vector<vr::DriverPose_t>& GetAllPoses() const = 0;
     };
 }
 

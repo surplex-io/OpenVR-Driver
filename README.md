@@ -30,7 +30,7 @@ because a debugger is a developers best friend <sup>(besides ctrl-z)</sup>.
 
 ## Building
 - Clone the project and submodules
-	- `git clone --recursive https://github.com/terminal29/Simple-OpenVR-Driver-Tutorial.git`
+	- `git clone --recursive https://github.com/John-Dean/Simple-OpenVR-Driver-Tutorial.git`
 - Build project with CMake
 	- `cd Simple-OpenVR-Driver-Tutorial && cmake .`
 - Open project with Visual Studio and hit build
