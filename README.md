@@ -48,9 +48,9 @@ If you would like to test this out, please do the following.
 
 ## Building
 - Clone the project and submodules
-	- `git clone --recursive https://github.com/John-Dean/Simple-OpenVR-Driver-Tutorial.git`
+	- `git clone --recursive https://github.com/John-Dean/OpenVR-Tracker-Websocket-Driver.git`
 - Build project with CMake
-	- `cd Simple-OpenVR-Driver-Tutorial && cmake .`
+	- `cd OpenVR-Tracker-Websocket-Driver && cmake .`
 - Open project with Visual Studio and hit build
 	- Driver folder structure and files will be copied to the output folder as `example`.
 	
