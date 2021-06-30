@@ -44,6 +44,28 @@ void __fastcall set_data(std::string set) // sets the value of globalVariable
 	raw_data = set;
 }
 
+
+
+static std::mutex globalVariableProtector_send;
+std::string raw_data_send = "";
+
+std::string __fastcall get_data_send()  // retrieves the value of globalVariable
+{
+	std::lock_guard<std::mutex> lock(globalVariableProtector_send);
+	return (raw_data_send);
+}
+
+void __fastcall unlock_data_send()  // retrieves the value of globalVariable
+{
+	std::lock_guard<std::mutex> unlock(globalVariableProtector_send);
+}
+
+void __fastcall set_data_send(std::string set) // sets the value of globalVariable 
+{
+	std::lock_guard<std::mutex> lock(globalVariableProtector_send);
+	raw_data_send = set;
+}
+
 //------------------------------------------------------------------------------
 
 using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
@@ -138,6 +160,8 @@ public:
 				*/
 				try {
 
+
+
 					std::string current_data = get_data();
 					unlock_data();
 
@@ -146,28 +170,35 @@ public:
 					//This code updates current_data with the message
 					std::string message = boost::beast::buffers_to_string(buffer_.data());
 
-					if (message == "") {
-						message = "{}";
+					if (message != "") {
+						if (message == "") {
+							message = "{}";
+						}
+
+						if (message.at(0) == '[') {
+							message = message.substr(1, message.length() - 2);
+						}
+
+
+						std::string new_message;
+						if (current_data == "") {
+							new_message = message;
+						}
+						else {
+							new_message = current_data + "," + message;
+						}
+
+						set_data(new_message);
+						unlock_data();
 					}
 
-					if (message.at(0) == '[') {
-						message = message.substr(1, message.length() - 2);
-					}
-
-
-					std::string new_message;
-					if (current_data == "") {
-						new_message = message;
-					}
-					else {
-						new_message = current_data + "," + message;
-					}
-
-					set_data(new_message);
-					unlock_data();
+					std::string reply_data = get_data_send();
+					unlock_data_send();
+					ws_.write(boost::asio::buffer(reply_data));
 				}
 				catch (...) {
 					unlock_data();
+					unlock_data_send();
 					return fail(ec, "write");
 				}
 				if (ec)
@@ -347,6 +378,40 @@ vr::EVRInitError ExampleDriver::VRDriver::Init(vr::IVRDriverContext* pDriverCont
 void ExampleDriver::VRDriver::Cleanup()
 {
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Calculates quaternion (qw,qx,qy,qz) representing the rotation
+// from: https://github.com/Omnifinity/OpenVR-Tracking-Example/blob/master/HTC%20Lighthouse%20Tracking%20Example/LighthouseTracking.cpp
+//-----------------------------------------------------------------------------
+
+vr::HmdQuaternion_t GetRotation(vr::HmdMatrix34_t matrix) {
+	vr::HmdQuaternion_t q;
+
+	q.w = sqrt(fmax(0, 1 + matrix.m[0][0] + matrix.m[1][1] + matrix.m[2][2])) / 2;
+	q.x = sqrt(fmax(0, 1 + matrix.m[0][0] - matrix.m[1][1] - matrix.m[2][2])) / 2;
+	q.y = sqrt(fmax(0, 1 - matrix.m[0][0] + matrix.m[1][1] - matrix.m[2][2])) / 2;
+	q.z = sqrt(fmax(0, 1 - matrix.m[0][0] - matrix.m[1][1] + matrix.m[2][2])) / 2;
+	q.x = copysign(q.x, matrix.m[2][1] - matrix.m[1][2]);
+	q.y = copysign(q.y, matrix.m[0][2] - matrix.m[2][0]);
+	q.z = copysign(q.z, matrix.m[1][0] - matrix.m[0][1]);
+	return q;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Extracts position (x,y,z).
+// from: https://github.com/Omnifinity/OpenVR-Tracking-Example/blob/master/HTC%20Lighthouse%20Tracking%20Example/LighthouseTracking.cpp
+//-----------------------------------------------------------------------------
+vr::HmdVector3_t GetPosition(vr::HmdMatrix34_t matrix) {
+	vr::HmdVector3_t vector;
+
+	vector.v[0] = matrix.m[0][3];
+	vector.v[1] = matrix.m[1][3];
+	vector.v[2] = matrix.m[2][3];
+
+	return vector;
+}
+
+
 
 void ExampleDriver::VRDriver::RunFrame()
 {
@@ -625,6 +690,56 @@ void ExampleDriver::VRDriver::RunFrame()
 	// Update devices
 	for (auto& device : this->devices_)
 		device->Update();
+
+
+	const int max_devices = 10;
+	vr::TrackedDevicePose_t device_poses[max_devices];
+	vr::VRServerDriverHost()->GetRawTrackedDevicePoses(0, device_poses, max_devices);
+	std::string device_positions = "[";
+	int total_devices = 0;
+	for (int i = 0; i < max_devices; i++)
+	{
+		if (device_poses[i].bDeviceIsConnected && device_poses[i].bPoseIsValid) {
+			total_devices++;
+
+			auto props = vr::VRProperties()->TrackedDeviceToPropertyContainer(i);
+
+			std::string modelNumber = vr::VRProperties()->GetStringProperty(props, vr::Prop_ModelNumber_String);
+			std::string renderModel = vr::VRProperties()->GetStringProperty(props, vr::Prop_RenderModelName_String);
+			int deviceClass = vr::VRProperties()->GetInt32Property(props, vr::Prop_DeviceClass_Int32);
+			int deviceRole = vr::VRProperties()->GetInt32Property(props, vr::Prop_ControllerRoleHint_Int32);
+
+
+			auto absolute_tracking = device_poses[i].mDeviceToAbsoluteTracking;
+			vr::HmdQuaternion_t q = GetRotation(absolute_tracking);
+			vr::HmdVector3_t pos = GetPosition(absolute_tracking);
+
+			if (total_devices > 1) {
+				device_positions = device_positions + ",";
+			}
+
+			device_positions = device_positions + "{" +
+				"\"class\":" + std::to_string(deviceClass) +
+				", \"role\":" + std::to_string(deviceRole) +
+				", \"x\":" + std::to_string(pos.v[0]) +
+				", \"y\":" + std::to_string(pos.v[1]) +
+				", \"z\":" + std::to_string(pos.v[2]) +
+				", \"qw\":" + std::to_string(q.w) +
+				", \"qx\":" + std::to_string(q.x) +
+				", \"qy\":" + std::to_string(q.y) +
+				", \"qz\":" + std::to_string(q.z) + "}";
+		}
+	}
+
+	device_positions = device_positions + "]";
+
+	try {
+		set_data_send(device_positions);
+		unlock_data_send();
+	}
+	catch (...) {
+		unlock_data_send();
+	}
 
 	//A testing script that cycles the x position of the first tracker
 	//auto& test_pose = this->device_poses.front();
