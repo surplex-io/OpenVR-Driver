@@ -379,7 +379,7 @@ std::string getLocalIP()
 
 int multithreadServer() {
 	boost::asio::io_context ioc{ 1 };
-	auto const address = boost::asio::ip::make_address("127.0.0.1");
+	auto const address = boost::asio::ip::make_address("0.0.0.0");
 	//auto const address = boost::asio::ip::make_address(getLocalIP());
 	auto const port = static_cast<unsigned short>(8082);
 	std::make_shared<listener>(ioc, tcp::endpoint{ address, port })->run();
