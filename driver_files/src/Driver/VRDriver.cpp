@@ -66,12 +66,44 @@ void __fastcall set_data_send(std::string set) // sets the value of globalVariab
 	raw_data_send = set;
 }
 
+
+
+static std::mutex globalVariableProtector_echo;
+std::string raw_data_echo = "";
+
+std::string __fastcall get_data_echo()  // retrieves the value of globalVariable
+{
+	std::lock_guard<std::mutex> lock(globalVariableProtector_echo);
+	return (raw_data_echo);
+}
+
+void __fastcall unlock_data_echo()  // retrieves the value of globalVariable
+{
+	std::lock_guard<std::mutex> unlock(globalVariableProtector_echo);
+}
+
+void __fastcall set_data_echo(std::string set) // sets the value of globalVariable 
+{
+	std::lock_guard<std::mutex> lock(globalVariableProtector_echo);
+	raw_data_echo = set;
+}
+
+
 //------------------------------------------------------------------------------
 
 using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
 namespace websocket = boost::beast::websocket;  // from <boost/beast/websocket.hpp>
 
 //------------------------------------------------------------------------------
+std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
+	size_t start_pos = 0;
+	while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+		str.replace(start_pos, from.length(), to);
+		start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+	}
+	return str;
+}
+
 
 // Report a failure
 void fail(boost::system::error_code ec, char const* what)
@@ -165,12 +197,14 @@ public:
 					std::string current_data = get_data();
 					unlock_data();
 
+					std::string current_echo = get_data_echo();
+					unlock_data_echo();
 					//ws_.write(boost::asio::buffer(current_data));
 
 					//This code updates current_data with the message
 					std::string message = boost::beast::buffers_to_string(buffer_.data());
 
-					if (message != "") {
+					if (message != "" && (message.at(0) == '[' || message.at(0) == '{')) {
 						if (message == "") {
 							message = "{}";
 						}
@@ -191,14 +225,37 @@ public:
 						set_data(new_message);
 						unlock_data();
 					}
+					else {
+
+
+						std::string new_echo;
+						if (current_echo == "") {
+							new_echo = message;
+						}
+						else {
+							new_echo = current_echo + "," + message;
+						}
+
+						new_echo = ReplaceAll(message, "\"", "\\\"");
+
+						set_data_echo(new_echo);
+						unlock_data();
+					}
 
 					std::string reply_data = get_data_send();
 					unlock_data_send();
-					ws_.write(boost::asio::buffer(reply_data));
+
+
+					std::string reply_echo = get_data_echo();
+					unlock_data_echo();
+
+					std::string reply_message = "{\"vr_trackers\": [" + reply_data + "], \"echo\": \"" + reply_echo + "\"}";
+					ws_.write(boost::asio::buffer(reply_message));
 				}
 				catch (...) {
 					unlock_data();
 					unlock_data_send();
+					unlock_data_echo();
 					return fail(ec, "write");
 				}
 				if (ec)
@@ -323,6 +380,7 @@ std::string getLocalIP()
 int multithreadServer() {
 	boost::asio::io_context ioc{ 1 };
 	auto const address = boost::asio::ip::make_address("127.0.0.1");
+	//auto const address = boost::asio::ip::make_address(getLocalIP());
 	auto const port = static_cast<unsigned short>(8082);
 	std::make_shared<listener>(ioc, tcp::endpoint{ address, port })->run();
 	ioc.run();
@@ -695,7 +753,7 @@ void ExampleDriver::VRDriver::RunFrame()
 	const int max_devices = 10;
 	vr::TrackedDevicePose_t device_poses[max_devices];
 	vr::VRServerDriverHost()->GetRawTrackedDevicePoses(0, device_poses, max_devices);
-	std::string device_positions = "[";
+	std::string device_positions = "";
 	int total_devices = 0;
 	for (int i = 0; i < max_devices; i++)
 	{
@@ -718,20 +776,51 @@ void ExampleDriver::VRDriver::RunFrame()
 				device_positions = device_positions + ",";
 			}
 
+
+
+			auto x = pos.v[0];
+			if (isnan(x)) {
+				x = 0;
+			}
+			auto y = pos.v[1];
+			if (isnan(y)) {
+				y = 0;
+			}
+			auto z = pos.v[2];
+			if (isnan(z)) {
+				z = 0;
+			}
+			auto qw = q.w;
+			if (isnan(qw)) {
+				qw = 0;
+			}
+			auto qx = q.x;
+			if (isnan(qx)) {
+				qx = 0;
+			}
+			auto qy = q.y;
+			if (isnan(qy)) {
+				qy = 0;
+			}
+			auto qz = q.z;
+			if (isnan(qz)) {
+				qz = 0;
+			}
+
 			device_positions = device_positions + "{" +
 				"\"class\":" + std::to_string(deviceClass) +
 				", \"role\":" + std::to_string(deviceRole) +
-				", \"x\":" + std::to_string(pos.v[0]) +
-				", \"y\":" + std::to_string(pos.v[1]) +
-				", \"z\":" + std::to_string(pos.v[2]) +
-				", \"qw\":" + std::to_string(q.w) +
-				", \"qx\":" + std::to_string(q.x) +
-				", \"qy\":" + std::to_string(q.y) +
-				", \"qz\":" + std::to_string(q.z) + "}";
+				", \"x\":" + std::to_string(x) +
+				", \"y\":" + std::to_string(y) +
+				", \"z\":" + std::to_string(z) +
+				", \"qw\":" + std::to_string(qw) +
+				", \"qx\":" + std::to_string(qx) +
+				", \"qy\":" + std::to_string(qy) +
+				", \"qz\":" + std::to_string(qz) + "}";
 		}
 	}
 
-	device_positions = device_positions + "]";
+	device_positions = device_positions;
 
 	try {
 		set_data_send(device_positions);
