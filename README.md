@@ -37,14 +37,22 @@ If you would like to test this out, please do the following.
 
 - Install the driver (from the releases or build it yourself using below instructions)
 - Start SteamVR and connect a headset
-- Navigate to https://www.websocket.org/echo.html
-- Set location to:
-	- `ws://127.0.0.1:8082`
-- Press connect
-- Set message to:
-	- `{"id":"tracker_0","x":1,"y":1,"z":1}`
-- Press send
-- In the SteamVR UI you should now see a tracker icon, and within SteamVR there should be a tracker shown (it may show as a controller model)
+- Start a local webserver
+- Open a console and paste and run the following
+- ```js
+// Create WebSocket connection.
+const socket = new WebSocket('ws://127.0.0.1:8082');
+
+// Connection opened
+socket.addEventListener('open', function (event) {
+ socket.send('{"id":"tracker_0","x":0,"y":1,"z":-1}');
+});
+
+// Listen for messages
+socket.addEventListener('message', function (event) {
+    console.log('Message from server ', event.data);
+});
+```
 
 ## Building
 - Clone the project and submodules
