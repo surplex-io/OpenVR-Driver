@@ -38,8 +38,8 @@ If you would like to test this out, please do the following.
 - Install the driver (from the releases or build it yourself using below instructions)
 - Start SteamVR and connect a headset
 - Start a local webserver
-- Open a console and paste and run the following
-- ```js
+- Open a console and paste and run the following:
+```js
 // Create WebSocket connection.
 const socket = new WebSocket('ws://127.0.0.1:8082');
 
