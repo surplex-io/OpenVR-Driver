@@ -21,6 +21,10 @@
 #include <thread>
 #include <vector>
 
+// -----------------------
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+// -----------------------
 
 // Report a failure
 void fail(boost::system::error_code ec, char const* what) {
@@ -637,11 +641,56 @@ public:
 
 					std::string reply_echo = get_data_echo();
 					unlock_data_echo();
+
+					std::string reply_echo_copy = reply_echo;
+
+					reply_echo = reply_echo + std::string(" ");
+
+
+					std::size_t n = reply_echo.length();
+					std::string escaped;
+					escaped.reserve(n * 2);        // pessimistic preallocation
+
+					for (std::size_t i = 0; i < n; ++i) {
+						if (reply_echo[i] == '\\' && reply_echo[i + 1] == '\"') {
+
+						}
+						else {
+							escaped += reply_echo[i];
+						}
+					}
+
+					reply_echo = escaped;
+
+
+
+					size_t endpos = reply_echo.find_last_not_of(" \t");
+					size_t startpos = reply_echo.find_first_not_of(" \t");
+					if (std::string::npos != endpos)
+					{
+						reply_echo = reply_echo.substr(0, endpos + 1);
+						reply_echo = reply_echo.substr(startpos);
+					}
+					else {
+						reply_echo.erase(std::remove(std::begin(reply_echo), std::end(reply_echo), ' '), std::end(reply_echo));
+					}
+
+
+
+
+
+
+					if (reply_echo.length() > 0 && json::accept(reply_echo)) {
+						//If valid JSON we use the modified string we made, otherwise use the original string
+					}else{
+						reply_echo = std::string("\"") + reply_echo_copy + std::string("\"");
+					}
+					
 					
 					std::string local_ip_str = get_ip_echo();
 					unlock_ip_echo();
 
-					std::string reply_message = "{\"vr_trackers\": [" + reply_data + "], \"echo\": \"" + reply_echo + "\", \"ip\": \"" + local_ip_str + "\"" + "}";
+					std::string reply_message = "{\"vr_trackers\": [" + reply_data + "], \"echo\": " + reply_echo + ", \"ip\": [" + local_ip_str + "]" + "}";
 						
 						
 					// std::string reply_message = "{\"vr_trackers\": [" + reply_data + "], \"echo\": \"" + reply_echo + "\"" + "}";
@@ -780,7 +829,7 @@ int SaveLocalIP()
 
 		
 		std::string current_ip(inet_ntoa(addr));
-		output_string = output_string + current_ip;
+		output_string = output_string + std::string("\"") +  current_ip + std::string("\"");
 	}
 
 	set_ip_echo(output_string);
@@ -823,10 +872,6 @@ std::string GetExePath()
 #include <cassert>
 
 int multithreadServer_ws() {	
-	// set_ip_echo(getLocalIP());
-	// unlock_ip_echo();
-	SaveLocalIP();
-	
 	// Code for the websocket server
 	boost::asio::io_context ioc{ 1 };
 	auto const address = boost::asio::ip::make_address("0.0.0.0");
@@ -868,14 +913,15 @@ void startServer() {
 	static bool running = FALSE;
 	if (!running) {
 		running = TRUE;
+
+		// set_ip_echo(getLocalIP());
+		// unlock_ip_echo();
+		SaveLocalIP();
+
 		boost::thread* thread = new boost::thread(&multithreadServer_ws);
 		boost::thread* thread_web = new boost::thread(&multithreadServer_web);
 	}
 }
-// -----------------------
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
-// -----------------------
 
 
 
