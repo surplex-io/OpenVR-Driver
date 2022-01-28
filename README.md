@@ -50,13 +50,19 @@ Commands can be stacked in a JSON array as follows (there should be no limit on 
 If any part of a command contains invalid JSON the whole request is ignored.
 
 ## Using the echo feature
-If you wish for the driver to echo a message back, sent a command that starts with a space, for example:  
-` "echo message"`  
+If you wish for the driver to echo a message back, sent a command that starts with a space.  
+```
+Sample message:
+ "echo message"
+```  
 
 When the server replies the `echo` field will now display your message.  
 
-This supports JSON formatting, for example:  
-` ["echo message list item 1", "echo message list item 2"]`  
+This supports JSON formatting.  
+```
+Sample message:
+ ["echo message list item 1", "echo message list item 2"]
+```
 
 The only condition is to start the message with a space.
 
