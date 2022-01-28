@@ -5,7 +5,7 @@
 
 #include <Driver/IVRDevice.hpp>
 
-namespace ExampleDriver {
+namespace websocket_trackersDriver {
 
     typedef std::variant<std::monostate, std::string, int, float, bool> SettingsValue;
 

@@ -1,6 +1,6 @@
 # Blender v2.81 (sub 16) OBJ File: ''
 # www.blender.org
-mtllib example_controller.mtl
+mtllib websocket_trackers_controller.mtl
 usemtl Material_75
 v -0.032265 -0.032265 0.032265
 v -0.032265 0.032265 0.032265

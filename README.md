@@ -1,20 +1,35 @@
-# Websocket OpenVR Driver Tutorial
+# Websocket OpenVR Driver
+The aim of this repository is to give the end user a driver that hosts a local websocket server on their computer which they can connect to and spawn trackers in VR.  
+It also echoes back the position of all currently active VR devices, allowing you to use the driver to find the position of a HMD using local websockets.  
 
-This is an adaptation of the repository authored by terminal29, "Simple-OpenVR-Driver-Tutorial"
+This is desirable as it allows simple applications (such as web based applications) to interface with SteamVR without the hassle of setting up their own driver.
 
-The aim of this repository is to give the end user a driver that hosts a local websocket server on their computer which they can connect to and spawn trackers in VR using simple JSON.
+Finally, the driver also has the ability to host a simple webserver, which serves the files in `/resources/webserver` on port 8088.  
+This can be accessed from: [http://localhost:8088](http://localhost:8088), which serves `/resources/webserver/index.html`.  
 
-This is desirable as it allows simple Python or JavaScript applications to interface with SteamVR and create trackers.
-This means you can write simple Python code to, for example, emulate a hip tracker using neural networks and a webcam and easily add it to SteamVR.
+This is built upon the work of [terminal29's](https://github.com/terminal29) ["Simple-OpenVR-Driver-Tutorial"](https://github.com/terminal29/Simple-OpenVR-Driver-Tutorial), the license for which is found at the bottom of this document.
+
+---
+
+# Quick setup
+A release file for this driver can be downloaded [here](https://github.com/John-Dean/OpenVR-Tracker-Websocket-Driver/releases/latest/download/driver.zip).
+
+## Installation
+Find your SteamVR driver directory, which should be at:  
+  `C:\Program Files (x86)\Steam\steamapps\common\SteamVR\drivers`  
+and copy the `websocket_trackers` directory into the SteamVR drivers directory.
+
+---
 
 # Websocket server
-The websocket server can be connected to at:
+The websocket server is hosted on port 8082, and can be connected to at:  
 `ws://127.0.0.1:8082`
 
-And commands are sent using JSON in the format:
+## Creating/updating trackers
+Commands are sent using a JSON object in the format:  
 `{"id":"tracker_0","x":0,"y":1,"z":2}`
 
-Where the following are valid keys:
+Where the following are valid keys:  
 - id (String - Required)
 	- Unique name of the tracker, if no tracker exists with the id a new tracker is created. For all intents and purposes there is no limit on the number that can be spawned.
 - x,y,z (Numeric - Optional - default 0)
@@ -23,21 +38,23 @@ Where the following are valid keys:
 	- Rotation in 3D space 
 - connected (Boolean - Optional - default true)
 	- Set to true/false to enable/disable the tracker
-	
+
+
 If a key is omitted the value will not be changed from the previous update.
 
-Commands can be stacked in a JSON array as follows (there should be no limit on how many can be added):
+## Updating multiple trackers in a single request
+Commands can be stacked in a JSON array as follows (there should be no limit on how many can be added):  
 `[{"id":"tracker_0","x":0,"y":1,"z":2}, {"id":"tracker_1","x":0,"y":1,"z":2}]`
 
-If a command contains invalid JSON the whole command is ignored.
+## Invalid commands
+If any part of a command contains invalid JSON the whole request is ignored.
 
-## Testing
-
+## Example code
 If you would like to test this out, please do the following.
 
 - Install the driver (from the releases or build it yourself using below instructions)
-- Start SteamVR and connect a headset
-- Start a local webserver
+- Start SteamVR
+- Navigate to [http://localhost:8088](http://localhost:8088)
 - Open a console and paste and run the following:
 ```js
 // Create WebSocket connection.
@@ -50,60 +67,51 @@ socket.addEventListener('open', function (event) {
 
 // Listen for messages
 socket.addEventListener('message', function (event) {
-    console.log('Message from server ', event.data);
+    console.log('Message from server ', JSON.parse(event.data));
 });
 ```
 
-## Building
+---
+
+# Building
+To build the project do the following (tested with CMake 3.20.1 and Visual Studio 2019):  
 - Clone the project and submodules
 	- `git clone --recursive https://github.com/John-Dean/OpenVR-Tracker-Websocket-Driver.git`
 - Build project with CMake
 	- `cd OpenVR-Tracker-Websocket-Driver && cmake .`
-- Open project with Visual Studio and hit build
-	- Driver folder structure and files will be copied to the output folder as `example`.
-	
-## Installation
+- Open project with Visual Studio, select release and build
+	- Driver folder structure and files will be copied to the output folder as `websocket_trackers`.
 
-There are two ways to "install" your plugin (The first one is recommended):
+---
 
-- Find your SteamVR driver directory, which should be at:
-  `C:\Program Files (x86)\Steam\steamapps\common\SteamVR\drivers`
-  and copy the `example` directory from the project's build directory into the SteamVR drivers directory. Your folder structure should look something like this:
-
-![Drivers folder structure](https://i.imgur.com/hOsDk1H.png)
-or
-
-- Navigate to `C:\Users\<Username>\AppData\Local\openvr` and find the `openvrpaths.vrpath` file. Open this file with your text editor of choice, and under `"external_drivers"`, add another entry with the location of the `example` folder. For example mine looks like this after adding the entry:
-
-```json
-{
-	"config" : 
-	[
-		"C:\\Program Files (x86)\\Steam\\config",
-		"c:\\program files (x86)\\steam\\config"
-	],
-	"external_drivers" : 
-	[
-		"C:\\Users\\<Username>\\Documents\\Programming\\c++\\Simple-OpenVR-Driver-Tutorial\\build\\Debug\\example"
-	],
-	"jsonid" : "vrpathreg",
-	"log" : 
-	[
-		"C:\\Program Files (x86)\\Steam\\logs",
-		"c:\\program files (x86)\\steam\\logs"
-	],
-	"runtime" : 
-	[
-		"C:\\Program Files (x86)\\Steam\\steamapps\\common\\SteamVR"
-	],
-	"version" : 1
-}
-```
-
-## License
+# Licenses
+## Websocket OpenVR Driver license
 MIT License
 
-Copyright (c) 2020 Jacob Hilton (Terminal29)
+Copyright (c) 2022 John Dean
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+## Original license (for [terminal29's](https://github.com/terminal29) ["Simple-OpenVR-Driver-Tutorial"](https://github.com/terminal29/Simple-OpenVR-Driver-Tutorial))
+MIT License
+
+Copyright (c) 2020 Jacob Hilton [Terminal29](https://github.com/terminal29)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

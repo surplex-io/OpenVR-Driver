@@ -1,17 +1,17 @@
 {
   "jsonid": "input_profile",
-  "controller_type": "example_tracker",
+  "controller_type": "websocket_trackers_tracker",
   "device_class": "TrackedDeviceClass_GenericTracker",
-  "resource_root": "example",
-  "driver_name": "example",
+  "resource_root": "websocket_trackers",
+  "driver_name": "websocket_trackers",
   "input_bindingui_mode": "single_device",
   "should_show_binding_errors": true,
   "input_bindingui_left": {
     "transform": "scale(-1,1)",
-    "image": "{example}/icons/example_tracker.svg"
+    "image": "{websocket_trackers}/icons/websocket_trackers_tracker.svg"
   },
   "input_bindingui_right": {
-    "image": "{example}/icons/example_tracker.svg"
+    "image": "{websocket_trackers}/icons/websocket_trackers_tracker.svg"
   },
   "input_source": {
     "/pose/raw" : {

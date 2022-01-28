@@ -1,7 +1,7 @@
 #include "TrackingReferenceDevice.hpp"
 #include <Windows.h>
 
-ExampleDriver::TrackingReferenceDevice::TrackingReferenceDevice(std::string serial):
+websocket_trackersDriver::TrackingReferenceDevice::TrackingReferenceDevice(std::string serial):
     serial_(serial)
 {
 
@@ -9,12 +9,12 @@ ExampleDriver::TrackingReferenceDevice::TrackingReferenceDevice(std::string seri
     this->random_angle_rad_ = fmod(rand() / 10000.f, 2 * 3.14159f);
 }
 
-std::string ExampleDriver::TrackingReferenceDevice::GetSerial()
+std::string websocket_trackersDriver::TrackingReferenceDevice::GetSerial()
 {
     return this->serial_;
 }
 
-void ExampleDriver::TrackingReferenceDevice::Update()
+void websocket_trackersDriver::TrackingReferenceDevice::Update()
 {
     if (this->device_index_ == vr::k_unTrackedDeviceIndexInvalid)
         return;
@@ -47,17 +47,17 @@ void ExampleDriver::TrackingReferenceDevice::Update()
     this->last_pose_ = pose;
 }
 
-DeviceType ExampleDriver::TrackingReferenceDevice::GetDeviceType()
+DeviceType websocket_trackersDriver::TrackingReferenceDevice::GetDeviceType()
 {
     return DeviceType::TRACKING_REFERENCE;
 }
 
-vr::TrackedDeviceIndex_t ExampleDriver::TrackingReferenceDevice::GetDeviceIndex()
+vr::TrackedDeviceIndex_t websocket_trackersDriver::TrackingReferenceDevice::GetDeviceIndex()
 {
     return this->device_index_;
 }
 
-vr::EVRInitError ExampleDriver::TrackingReferenceDevice::Activate(uint32_t unObjectId)
+vr::EVRInitError websocket_trackersDriver::TrackingReferenceDevice::Activate(uint32_t unObjectId)
 {
     this->device_index_ = unObjectId;
 
@@ -70,46 +70,46 @@ vr::EVRInitError ExampleDriver::TrackingReferenceDevice::Activate(uint32_t unObj
     GetDriver()->GetProperties()->SetUint64Property(props, vr::Prop_CurrentUniverseId_Uint64, 2);
     
     // Set up a model "number" (not needed but good to have)
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_ModelNumber_String, "example_trackingreference");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_ModelNumber_String, "websocket_trackers_trackingreference");
 
     // Set up a render model path
     GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_RenderModelName_String, "locator");
 
     // Set the icons
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceReady_String, "{example}/icons/trackingreference_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceReady_String, "{websocket_trackers}/icons/trackingreference_ready.png");
 
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceOff_String, "{example}/icons/trackingreference_not_ready.png");
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceSearching_String, "{example}/icons/trackingreference_not_ready.png");
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceSearchingAlert_String, "{example}/icons/trackingreference_not_ready.png");
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceReadyAlert_String, "{example}/icons/trackingreference_not_ready.png");
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceNotReady_String, "{example}/icons/trackingreference_not_ready.png");
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceStandby_String, "{example}/icons/trackingreference_not_ready.png");
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceAlertLow_String, "{example}/icons/trackingreference_not_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceOff_String, "{websocket_trackers}/icons/trackingreference_not_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceSearching_String, "{websocket_trackers}/icons/trackingreference_not_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceSearchingAlert_String, "{websocket_trackers}/icons/trackingreference_not_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceReadyAlert_String, "{websocket_trackers}/icons/trackingreference_not_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceNotReady_String, "{websocket_trackers}/icons/trackingreference_not_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceStandby_String, "{websocket_trackers}/icons/trackingreference_not_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceAlertLow_String, "{websocket_trackers}/icons/trackingreference_not_ready.png");
 
     return vr::EVRInitError::VRInitError_None;
 }
 
-void ExampleDriver::TrackingReferenceDevice::Deactivate()
+void websocket_trackersDriver::TrackingReferenceDevice::Deactivate()
 {
     this->device_index_ = vr::k_unTrackedDeviceIndexInvalid;
 }
 
-void ExampleDriver::TrackingReferenceDevice::EnterStandby()
+void websocket_trackersDriver::TrackingReferenceDevice::EnterStandby()
 {
 }
 
-void* ExampleDriver::TrackingReferenceDevice::GetComponent(const char* pchComponentNameAndVersion)
+void* websocket_trackersDriver::TrackingReferenceDevice::GetComponent(const char* pchComponentNameAndVersion)
 {
     return nullptr;
 }
 
-void ExampleDriver::TrackingReferenceDevice::DebugRequest(const char* pchRequest, char* pchResponseBuffer, uint32_t unResponseBufferSize)
+void websocket_trackersDriver::TrackingReferenceDevice::DebugRequest(const char* pchRequest, char* pchResponseBuffer, uint32_t unResponseBufferSize)
 {
     if (unResponseBufferSize >= 1)
         pchResponseBuffer[0] = 0;
 }
 
-vr::DriverPose_t ExampleDriver::TrackingReferenceDevice::GetPose()
+vr::DriverPose_t websocket_trackersDriver::TrackingReferenceDevice::GetPose()
 {
     return last_pose_;
 }

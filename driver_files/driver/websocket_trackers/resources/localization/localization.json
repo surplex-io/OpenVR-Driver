@@ -1,9 +1,9 @@
 [
   {
     "language_tag": "en_US",
-    "example_controller": "Example Controller",
-    "example_tracker": "Example Tracker",
-    "example_basestation": "Example BaseStation",
+    "websocket_trackers_controller": "websocket_trackers Controller",
+    "websocket_trackers_tracker": "websocket_trackers Tracker",
+    "websocket_trackers_basestation": "websocket_trackers BaseStation",
     "/input/a": "A Button",
     "/input/b": "B Button",
     "/input/system": "System Button",

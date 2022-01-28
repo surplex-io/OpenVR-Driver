@@ -1,16 +1,16 @@
 #include "HMDDevice.hpp"
 #include <Windows.h>
 
-ExampleDriver::HMDDevice::HMDDevice(std::string serial):serial_(serial)
+websocket_trackersDriver::HMDDevice::HMDDevice(std::string serial):serial_(serial)
 {
 }
 
-std::string ExampleDriver::HMDDevice::GetSerial()
+std::string websocket_trackersDriver::HMDDevice::GetSerial()
 {
     return this->serial_;
 }
 
-void ExampleDriver::HMDDevice::Update()
+void websocket_trackersDriver::HMDDevice::Update()
 {
     if (this->device_index_ == vr::k_unTrackedDeviceIndexInvalid)
         return;
@@ -58,17 +58,17 @@ void ExampleDriver::HMDDevice::Update()
     this->last_pose_ = pose;
 }
 
-DeviceType ExampleDriver::HMDDevice::GetDeviceType()
+DeviceType websocket_trackersDriver::HMDDevice::GetDeviceType()
 {
     return DeviceType::HMD;
 }
 
-vr::TrackedDeviceIndex_t ExampleDriver::HMDDevice::GetDeviceIndex()
+vr::TrackedDeviceIndex_t websocket_trackersDriver::HMDDevice::GetDeviceIndex()
 {
     return this->device_index_;
 }
 
-vr::EVRInitError ExampleDriver::HMDDevice::Activate(uint32_t unObjectId)
+vr::EVRInitError websocket_trackersDriver::HMDDevice::Activate(uint32_t unObjectId)
 {
     this->device_index_ = unObjectId;
 
@@ -117,18 +117,18 @@ vr::EVRInitError ExampleDriver::HMDDevice::Activate(uint32_t unObjectId)
     GetDriver()->GetProperties()->SetFloatProperty(props, vr::Prop_DisplayFrequency_Float, 90.f);
     
     // Set up a model "number" (not needed but good to have)
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_ModelNumber_String, "EXAMPLE_HMD_DEVICE");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_ModelNumber_String, "websocket_trackers_HMD_DEVICE");
 
     // Set up icon paths
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceReady_String, "{example}/icons/hmd_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceReady_String, "{websocket_trackers}/icons/hmd_ready.png");
 
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceOff_String, "{example}/icons/hmd_not_ready.png");
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceSearching_String, "{example}/icons/hmd_not_ready.png");
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceSearchingAlert_String, "{example}/icons/hmd_not_ready.png");
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceReadyAlert_String, "{example}/icons/hmd_not_ready.png");
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceNotReady_String, "{example}/icons/hmd_not_ready.png");
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceStandby_String, "{example}/icons/hmd_not_ready.png");
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceAlertLow_String, "{example}/icons/hmd_not_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceOff_String, "{websocket_trackers}/icons/hmd_not_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceSearching_String, "{websocket_trackers}/icons/hmd_not_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceSearchingAlert_String, "{websocket_trackers}/icons/hmd_not_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceReadyAlert_String, "{websocket_trackers}/icons/hmd_not_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceNotReady_String, "{websocket_trackers}/icons/hmd_not_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceStandby_String, "{websocket_trackers}/icons/hmd_not_ready.png");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceAlertLow_String, "{websocket_trackers}/icons/hmd_not_ready.png");
 
     
 
@@ -136,16 +136,16 @@ vr::EVRInitError ExampleDriver::HMDDevice::Activate(uint32_t unObjectId)
     return vr::EVRInitError::VRInitError_None;
 }
 
-void ExampleDriver::HMDDevice::Deactivate()
+void websocket_trackersDriver::HMDDevice::Deactivate()
 {
     this->device_index_ = vr::k_unTrackedDeviceIndexInvalid;
 }
 
-void ExampleDriver::HMDDevice::EnterStandby()
+void websocket_trackersDriver::HMDDevice::EnterStandby()
 {
 }
 
-void* ExampleDriver::HMDDevice::GetComponent(const char* pchComponentNameAndVersion)
+void* websocket_trackersDriver::HMDDevice::GetComponent(const char* pchComponentNameAndVersion)
 {
     if (!_stricmp(pchComponentNameAndVersion, vr::IVRDisplayComponent_Version)) {
         return static_cast<vr::IVRDisplayComponent*>(this);
@@ -153,18 +153,18 @@ void* ExampleDriver::HMDDevice::GetComponent(const char* pchComponentNameAndVers
     return nullptr;
 }
 
-void ExampleDriver::HMDDevice::DebugRequest(const char* pchRequest, char* pchResponseBuffer, uint32_t unResponseBufferSize)
+void websocket_trackersDriver::HMDDevice::DebugRequest(const char* pchRequest, char* pchResponseBuffer, uint32_t unResponseBufferSize)
 {
     if (unResponseBufferSize >= 1)
         pchResponseBuffer[0] = 0;
 }
 
-vr::DriverPose_t ExampleDriver::HMDDevice::GetPose()
+vr::DriverPose_t websocket_trackersDriver::HMDDevice::GetPose()
 {
     return this->last_pose_;
 }
 
-void ExampleDriver::HMDDevice::GetWindowBounds(int32_t* pnX, int32_t* pnY, uint32_t* pnWidth, uint32_t* pnHeight)
+void websocket_trackersDriver::HMDDevice::GetWindowBounds(int32_t* pnX, int32_t* pnY, uint32_t* pnWidth, uint32_t* pnHeight)
 {
     *pnX = this->window_x_;
     *pnY = this->window_y_;
@@ -172,23 +172,23 @@ void ExampleDriver::HMDDevice::GetWindowBounds(int32_t* pnX, int32_t* pnY, uint3
     *pnHeight = this->window_height_;
 }
 
-bool ExampleDriver::HMDDevice::IsDisplayOnDesktop()
+bool websocket_trackersDriver::HMDDevice::IsDisplayOnDesktop()
 {
     return true;
 }
 
-bool ExampleDriver::HMDDevice::IsDisplayRealDisplay()
+bool websocket_trackersDriver::HMDDevice::IsDisplayRealDisplay()
 {
     return false;
 }
 
-void ExampleDriver::HMDDevice::GetRecommendedRenderTargetSize(uint32_t* pnWidth, uint32_t* pnHeight)
+void websocket_trackersDriver::HMDDevice::GetRecommendedRenderTargetSize(uint32_t* pnWidth, uint32_t* pnHeight)
 {
     *pnWidth = this->window_width_;
     *pnHeight = this->window_height_;
 }
 
-void ExampleDriver::HMDDevice::GetEyeOutputViewport(vr::EVREye eEye, uint32_t* pnX, uint32_t* pnY, uint32_t* pnWidth, uint32_t* pnHeight)
+void websocket_trackersDriver::HMDDevice::GetEyeOutputViewport(vr::EVREye eEye, uint32_t* pnX, uint32_t* pnY, uint32_t* pnWidth, uint32_t* pnHeight)
 {
     *pnY = 0;
     *pnWidth = this->window_width_ / 2;
@@ -202,7 +202,7 @@ void ExampleDriver::HMDDevice::GetEyeOutputViewport(vr::EVREye eEye, uint32_t* p
     }
 }
 
-void ExampleDriver::HMDDevice::GetProjectionRaw(vr::EVREye eEye, float* pfLeft, float* pfRight, float* pfTop, float* pfBottom)
+void websocket_trackersDriver::HMDDevice::GetProjectionRaw(vr::EVREye eEye, float* pfLeft, float* pfRight, float* pfTop, float* pfBottom)
 {
     *pfLeft = -1;
     *pfRight = 1;
@@ -210,7 +210,7 @@ void ExampleDriver::HMDDevice::GetProjectionRaw(vr::EVREye eEye, float* pfLeft, 
     *pfBottom = 1;
 }
 
-vr::DistortionCoordinates_t ExampleDriver::HMDDevice::ComputeDistortion(vr::EVREye eEye, float fU, float fV)
+vr::DistortionCoordinates_t websocket_trackersDriver::HMDDevice::ComputeDistortion(vr::EVREye eEye, float fU, float fV)
 {
     vr::DistortionCoordinates_t coordinates;
     coordinates.rfBlue[0] = fU;

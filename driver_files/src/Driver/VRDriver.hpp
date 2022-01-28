@@ -8,7 +8,7 @@
 #include <Driver/IVRDriver.hpp>
 #include <Driver/IVRDevice.hpp>
 
-namespace ExampleDriver {
+namespace websocket_trackersDriver {
     class VRDriver : public IVRDriver {
     public:
 
@@ -42,7 +42,7 @@ namespace ExampleDriver {
         std::vector<vr::VREvent_t> openvr_events_;
         std::chrono::milliseconds frame_timing_ = std::chrono::milliseconds(16);
         std::chrono::system_clock::time_point last_frame_time_ = std::chrono::system_clock::now();
-        std::string settings_key_ = "driver_example";
+        std::string settings_key_ = "driver_websocket_trackers";
 		
 		std::vector<std::string> device_serials;
 		std::vector<std::string> device_names;

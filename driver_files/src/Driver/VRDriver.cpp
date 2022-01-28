@@ -886,7 +886,7 @@ int multithreadServer_ws() {
 int multithreadServer_web() {
 	auto directory = GetExePath();
 	auto doc_pre = std::string("\\..\\..\\drivers\\");
-	auto driver_name = std::string("example");
+	auto driver_name = std::string("websocket_trackers");
 	auto doc_root = std::string("\\resources\\webserver\\");
 	auto combined_string = directory + doc_pre + driver_name + doc_root;
 	
@@ -926,44 +926,44 @@ void startServer() {
 
 
 vr::EVRInitError
-ExampleDriver::VRDriver::Init(vr::IVRDriverContext* pDriverContext) {
+websocket_trackersDriver::VRDriver::Init(vr::IVRDriverContext* pDriverContext) {
 	// Perform driver context initialisation
 	if (vr::EVRInitError init_error = vr::InitServerDriverContext(pDriverContext);
 		init_error != vr::EVRInitError::VRInitError_None) {
 		return init_error;
 	}
 
-	Log("Activating ExampleDriver...");
+	Log("Activating websocket_trackersDriver...");
 
 	// Add a HMD
-	// this->AddDevice(std::make_shared<HMDDevice>("Example_HMDDevice"));
+	// this->AddDevice(std::make_shared<HMDDevice>("websocket_trackers_HMDDevice"));
 
 	// Add a couple controllers
-	// this->AddDevice(std::make_shared<ControllerDevice>("Example_ControllerDevice_Left",
+	// this->AddDevice(std::make_shared<ControllerDevice>("websocket_trackers_ControllerDevice_Left",
 	// ControllerDevice::Handedness::LEFT));
-	// this->AddDevice(std::make_shared<ControllerDevice>("Example_ControllerDevice_Right",
+	// this->AddDevice(std::make_shared<ControllerDevice>("websocket_trackers_ControllerDevice_Right",
 	// ControllerDevice::Handedness::RIGHT));
 
 	// Add a tracker
-	// this->AddDevice(std::make_shared<TrackerDevice>("Example_TrackerDevice"));
+	// this->AddDevice(std::make_shared<TrackerDevice>("websocket_trackers_TrackerDevice"));
 
 	// Add a couple tracking references
-	// this->AddDevice(std::make_shared<TrackingReferenceDevice>("Example_TrackingReference_A"));
-	// this->AddDevice(std::make_shared<TrackingReferenceDevice>("Example_TrackingReference_B"));
+	// this->AddDevice(std::make_shared<TrackingReferenceDevice>("websocket_trackers_TrackingReference_A"));
+	// this->AddDevice(std::make_shared<TrackingReferenceDevice>("websocket_trackers_TrackingReference_B"));
 
-	Log("ExampleDriver Loaded Successfully");
+	Log("websocket_trackersDriver Loaded Successfully");
 
 	startServer();
 
 	return vr::VRInitError_None;
 }
 
-void ExampleDriver::VRDriver::Cleanup() {}
+void websocket_trackersDriver::VRDriver::Cleanup() {}
 
 //-----------------------------------------------------------------------------
 // Purpose: Calculates quaternion (qw,qx,qy,qz) representing the rotation
 // from:
-// https://github.com/Omnifinity/OpenVR-Tracking-Example/blob/master/HTC%20Lighthouse%20Tracking%20Example/LighthouseTracking.cpp
+// https://github.com/Omnifinity/OpenVR-Tracking-websocket_trackers/blob/master/HTC%20Lighthouse%20Tracking%20websocket_trackers/LighthouseTracking.cpp
 //-----------------------------------------------------------------------------
 
 vr::HmdQuaternion_t GetRotation(vr::HmdMatrix34_t matrix) {
@@ -982,7 +982,7 @@ vr::HmdQuaternion_t GetRotation(vr::HmdMatrix34_t matrix) {
 //-----------------------------------------------------------------------------
 // Purpose: Extracts position (x,y,z).
 // from:
-// https://github.com/Omnifinity/OpenVR-Tracking-Example/blob/master/HTC%20Lighthouse%20Tracking%20Example/LighthouseTracking.cpp
+// https://github.com/Omnifinity/OpenVR-Tracking-websocket_trackers/blob/master/HTC%20Lighthouse%20Tracking%20websocket_trackers/LighthouseTracking.cpp
 //-----------------------------------------------------------------------------
 vr::HmdVector3_t GetPosition(vr::HmdMatrix34_t matrix) {
 	vr::HmdVector3_t vector;
@@ -994,7 +994,7 @@ vr::HmdVector3_t GetPosition(vr::HmdMatrix34_t matrix) {
 	return vector;
 }
 
-void ExampleDriver::VRDriver::RunFrame() {
+void websocket_trackersDriver::VRDriver::RunFrame() {
 	std::string current_data = "";
 
 	try {
@@ -1340,41 +1340,41 @@ void ExampleDriver::VRDriver::RunFrame() {
 	//}
 }
 
-bool ExampleDriver::VRDriver::ShouldBlockStandbyMode() { return false; }
+bool websocket_trackersDriver::VRDriver::ShouldBlockStandbyMode() { return false; }
 
-void ExampleDriver::VRDriver::EnterStandby() {}
+void websocket_trackersDriver::VRDriver::EnterStandby() {}
 
-void ExampleDriver::VRDriver::LeaveStandby() {}
+void websocket_trackersDriver::VRDriver::LeaveStandby() {}
 
-std::vector<std::shared_ptr<ExampleDriver::IVRDevice>>
-ExampleDriver::VRDriver::GetDevices() {
+std::vector<std::shared_ptr<websocket_trackersDriver::IVRDevice>>
+websocket_trackersDriver::VRDriver::GetDevices() {
 	return this->devices_;
 }
 
-std::vector<vr::VREvent_t> ExampleDriver::VRDriver::GetOpenVREvents() {
+std::vector<vr::VREvent_t> websocket_trackersDriver::VRDriver::GetOpenVREvents() {
 	return this->openvr_events_;
 }
 
-std::chrono::milliseconds ExampleDriver::VRDriver::GetLastFrameTime() {
+std::chrono::milliseconds websocket_trackersDriver::VRDriver::GetLastFrameTime() {
 	return this->frame_timing_;
 }
 
 const std::vector<std::string>&
-ExampleDriver::VRDriver::GetDeviceSerials() const {
+websocket_trackersDriver::VRDriver::GetDeviceSerials() const {
 	return this->device_serials;
 }
 
 const std::vector<std::string>&
-ExampleDriver::VRDriver::GetDeviceNames() const {
+websocket_trackersDriver::VRDriver::GetDeviceNames() const {
 	return this->device_names;
 }
 
 const std::vector<vr::DriverPose_t>&
-ExampleDriver::VRDriver::GetAllPoses() const {
+websocket_trackersDriver::VRDriver::GetAllPoses() const {
 	return this->device_poses;
 }
 
-bool ExampleDriver::VRDriver::AddDevice(std::shared_ptr<IVRDevice> device) {
+bool websocket_trackersDriver::VRDriver::AddDevice(std::shared_ptr<IVRDevice> device) {
 	vr::ETrackedDeviceClass openvr_device_class;
 	// Remember to update this switch when new device types are added
 	switch (device->GetDeviceType()) {
@@ -1409,8 +1409,8 @@ bool ExampleDriver::VRDriver::AddDevice(std::shared_ptr<IVRDevice> device) {
 	return result;
 }
 
-ExampleDriver::SettingsValue
-ExampleDriver::VRDriver::GetSettingsValue(std::string key) {
+websocket_trackersDriver::SettingsValue
+websocket_trackersDriver::VRDriver::GetSettingsValue(std::string key) {
 	vr::EVRSettingsError err = vr::EVRSettingsError::VRSettingsError_None;
 	int int_value =
 		vr::VRSettings()->GetInt32(settings_key_.c_str(), key.c_str(), &err);
@@ -1441,19 +1441,19 @@ ExampleDriver::VRDriver::GetSettingsValue(std::string key) {
 	return SettingsValue();
 }
 
-void ExampleDriver::VRDriver::Log(std::string message) {
+void websocket_trackersDriver::VRDriver::Log(std::string message) {
 	std::string message_endl = message + "\n";
 	vr::VRDriverLog()->Log(message_endl.c_str());
 }
 
-vr::IVRDriverInput* ExampleDriver::VRDriver::GetInput() {
+vr::IVRDriverInput* websocket_trackersDriver::VRDriver::GetInput() {
 	return vr::VRDriverInput();
 }
 
-vr::CVRPropertyHelpers* ExampleDriver::VRDriver::GetProperties() {
+vr::CVRPropertyHelpers* websocket_trackersDriver::VRDriver::GetProperties() {
 	return vr::VRProperties();
 }
 
-vr::IVRServerDriverHost* ExampleDriver::VRDriver::GetDriverHost() {
+vr::IVRServerDriverHost* websocket_trackersDriver::VRDriver::GetDriverHost() {
 	return vr::VRServerDriverHost();
 }
