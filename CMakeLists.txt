@@ -24,6 +24,7 @@ endif()
 
 find_library(OPENVR_LIB openvr_api HINTS "${CMAKE_CURRENT_SOURCE_DIR}/libraries/openvr/lib/${PLATFORM_NAME}${PROCESSOR_ARCH}/" NO_DEFAULT_PATH )
 
+
 # websocket_trackers Driver
 set(DRIVER_NAME "websocket_trackers")
 set(websocket_trackers_PROJECT "driver_${DRIVER_NAME}")
@@ -42,8 +43,11 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/driver_files/src" PREFIX "Header 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/driver_files/src" PREFIX "Source Files" FILES ${SOURCES})
 set_property(TARGET "${websocket_trackers_PROJECT}" PROPERTY CXX_STANDARD 17)
 
-
-
+# OpenSSL support (uncomment below)
+# target_link_directories("${websocket_trackers_PROJECT}" PUBLIC "C:/Program Files/OpenSSL-Win64/lib")
+# target_include_directories("${websocket_trackers_PROJECT}" PUBLIC "C:/Program Files/OpenSSL-Win64/include")
+# find_package(OpenSSL REQUIRED)
+# target_link_libraries("${websocket_trackers_PROJECT}" PUBLIC OpenSSL::SSL)
 
 
 # Copy driver assets to output folder
@@ -68,7 +72,7 @@ add_custom_command(
 
 
 # INCLUDE DIRECTORY
-# $(ProjectDir)libraries\boost_1_69_0;$(ProjectDir)libraries;$(IncludePath)
+# $(ProjectDir)libraries\boost_1_69_0;$(ProjectDir)libraries;$(IncludePath);
 
 # LIBRARY DIRECTORY
 # $(ProjectDir)libraries\boost_1_69_0;$(ProjectDir)libraries;$(LibraryPath)

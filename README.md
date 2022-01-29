@@ -95,6 +95,9 @@ socket.addEventListener('message', function (event) {
 
 # Building
 To build the project do the following (tested with CMake 3.20.1 and Visual Studio 2019):  
+- Download OpenSSL from here  
+    - `https://slproweb.com/products/Win32OpenSSL.html`  
+  Tested with `Win64 OpenSSL v3.0.1`.
 - Clone the project and submodules
 	- `git clone --recursive https://github.com/John-Dean/OpenVR-Tracker-Websocket-Driver.git`
 - Build project with CMake
