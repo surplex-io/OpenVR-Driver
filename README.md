@@ -4,8 +4,11 @@ It also echoes back the position of all currently active VR devices, allowing yo
 
 This is desirable as it allows simple applications (such as web based applications) to interface with SteamVR without the hassle of setting up their own driver.
 
-Finally, the driver also has the ability to host a simple webserver, which serves the files in `/resources/webserver` on port 8088.  
+The driver also hosts a simple webserver, which serves the files in `/resources/webserver` on port 8088.  
 This can be accessed from: [http://localhost:8088](http://localhost:8088), which serves `/resources/webserver/index.html`.  
+
+
+The driver also hosts 3 additional pseudo-https (non-trusted certificate) webservers, which serves the files in `/resources/webserver` on port 8089/8090/8091. By sending requests to these in binary (8090 = 0, 8091 = 1, 8089 = end) you can remotely store data in the echo value on the websocket. An example of this is included in `send-echo-ssl.js`.  
 
 This is built upon the work of [terminal29's](https://github.com/terminal29) ["Simple-OpenVR-Driver-Tutorial"](https://github.com/terminal29/Simple-OpenVR-Driver-Tutorial), the license for which is found at the bottom of this document.
 
@@ -95,9 +98,8 @@ socket.addEventListener('message', function (event) {
 
 # Building
 To build the project do the following (tested with CMake 3.20.1 and Visual Studio 2019):  
-- Download OpenSSL from here  
-    - `https://slproweb.com/products/Win32OpenSSL.html`  
-  Tested with `Win64 OpenSSL v3.0.1`.
+- Download OpenSSL from here `https://slproweb.com/products/Win32OpenSSL.html`  
+  Tested with `Win64 OpenSSL v3.0.1`. Install into the default location (`C:\Program Files\OpenSSL-Win64`).
 - Clone the project and submodules
 	- `git clone --recursive https://github.com/John-Dean/OpenVR-Tracker-Websocket-Driver.git`
 - Build project with CMake
@@ -111,7 +113,7 @@ To build the project do the following (tested with CMake 3.20.1 and Visual Studi
 ## Websocket OpenVR Driver license
 MIT License
 
-Copyright (c) 2022 John Dean
+Copyright (c) 2021-2022 John Dean
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

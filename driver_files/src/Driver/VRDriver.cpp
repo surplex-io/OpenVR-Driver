@@ -21,6 +21,11 @@
 #include <thread>
 #include <vector>
 
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <bitset>
+
 
 namespace net = boost::asio;            // from <boost/asio.hpp>
 
@@ -69,12 +74,143 @@ std::string readFileIntoString(std::string& path) {
 }
 
 
+
+
+//------------------------------------------------------------------------------
+
+
+
+#include <mutex>
+
+static std::mutex globalVariableProtector;
+std::string raw_data = "";
+
+std::string __fastcall get_data() // retrieves the value of globalVariable
+{
+	std::lock_guard<std::mutex> lock(globalVariableProtector);
+	return (raw_data);
+}
+
+void __fastcall unlock_data() // retrieves the value of globalVariable
+{
+	std::lock_guard<std::mutex> unlock(globalVariableProtector);
+}
+
+void __fastcall set_data(std::string set) // sets the value of globalVariable
+{
+	std::lock_guard<std::mutex> lock(globalVariableProtector);
+	raw_data = set;
+}
+
+static std::mutex globalVariableProtector_send;
+std::string raw_data_send = "";
+
+std::string __fastcall get_data_send() // retrieves the value of globalVariable
+{
+	std::lock_guard<std::mutex> lock(globalVariableProtector_send);
+	return (raw_data_send);
+}
+
+void __fastcall unlock_data_send() // retrieves the value of globalVariable
+{
+	std::lock_guard<std::mutex> unlock(globalVariableProtector_send);
+}
+
+void __fastcall set_data_send(
+	std::string set) // sets the value of globalVariable
+{
+	std::lock_guard<std::mutex> lock(globalVariableProtector_send);
+	raw_data_send = set;
+}
+
+static std::mutex globalVariableProtector_echo;
+std::string raw_data_echo = "";
+
+std::string __fastcall get_data_echo() // retrieves the value of globalVariable
+{
+	std::lock_guard<std::mutex> lock(globalVariableProtector_echo);
+	return (raw_data_echo);
+}
+
+void __fastcall unlock_data_echo() // retrieves the value of globalVariable
+{
+	std::lock_guard<std::mutex> unlock(globalVariableProtector_echo);
+}
+
+void __fastcall set_data_echo(
+	std::string set) // sets the value of globalVariable
+{
+	std::lock_guard<std::mutex> lock(globalVariableProtector_echo);
+	raw_data_echo = set;
+}
+
+static std::mutex globalVariableProtector_localip;
+std::string local_ip_echo = "";
+
+std::string __fastcall get_ip_echo() // retrieves the value of globalVariable
+{
+	std::lock_guard<std::mutex> lock(globalVariableProtector_localip);
+	return (local_ip_echo);
+}
+
+void __fastcall unlock_ip_echo() // retrieves the value of globalVariable
+{
+	std::lock_guard<std::mutex> unlock(globalVariableProtector_localip);
+}
+
+void __fastcall set_ip_echo(
+	std::string set) // sets the value of globalVariable
+{
+	std::lock_guard<std::mutex> lock(globalVariableProtector_localip);
+	local_ip_echo = set;
+}
+
+
+static std::mutex globalVariableProtector_ssl_transmit;
+std::string ssl_transmit = "";
+
+std::string __fastcall get_ssl_transmit() // retrieves the value of globalVariable
+{
+	std::lock_guard<std::mutex> lock(globalVariableProtector_ssl_transmit);
+	return (ssl_transmit);
+}
+
+void __fastcall unlock_ssl_transmit() // retrieves the value of globalVariable
+{
+	std::lock_guard<std::mutex> unlock(globalVariableProtector_ssl_transmit);
+}
+
+void __fastcall set_ssl_transmit(
+	std::string set) // sets the value of globalVariable
+{
+	std::lock_guard<std::mutex> lock(globalVariableProtector_ssl_transmit);
+	ssl_transmit = set;
+}
+
+
+//------------------------------------------------------------------------------
+
+
+
+std::string ReplaceAll(std::string str, const std::string& from,
+	const std::string& to) {
+	size_t start_pos = 0;
+	while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+		str.replace(start_pos, from.length(), to);
+		start_pos +=
+			to.length(); // Handles case where 'to' is a substring of 'from'
+	}
+	return str;
+}
+
+
+
 // -------------
 // SSL code
 // -------------
 // start
 
-/*
+/**/
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/ssl/context.hpp>
 #include <cstddef>
@@ -579,136 +715,1313 @@ public:
 	}
 };
 
-
-
-
-
 // -------------
 // WEB SERVER CODE
 // -------------
 // end
 
+// -------------
+// WEB SERVER CODE ssl0
+// -------------
+// start
+// https://www.boost.org/doc/libs/1_69_0/libs/beast/example/http/server/async-ssl/http_server_async_ssl.cpp
+
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast/version.hpp>
+#include <boost/asio/bind_executor.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ssl/stream.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/config.hpp>
+#include <algorithm>
+#include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <thread>
+#include <vector>
+
+using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
+namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
+namespace http = boost::beast::http;    // from <boost/beast/http.hpp>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#include <mutex>
-
-static std::mutex globalVariableProtector;
-std::string raw_data = "";
-
-std::string __fastcall get_data() // retrieves the value of globalVariable
+// This function produces an HTTP response for the given
+// request. The type of the response object depends on the
+// contents of the request, so the interface requires the
+// caller to pass a generic lambda for receiving the response.
+template<
+	class Body, class Allocator,
+	class Send>
+	void
+	handle_request_ssl0(
+		boost::beast::string_view doc_root,
+		http::request<Body, http::basic_fields<Allocator>>&& req,
+		Send&& send)
 {
-	std::lock_guard<std::mutex> lock(globalVariableProtector);
-	return (raw_data);
-}
+	// Returns a bad request response
+	auto const bad_request =
+		[&req](boost::beast::string_view why)
+	{
+		http::response<http::string_body> res{ http::status::bad_request, req.version() };
+		res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+		res.set(http::field::content_type, "text/html");
+		res.keep_alive(req.keep_alive());
+		res.body() = why.to_string();
+		res.prepare_payload();
+		return res;
+	};
 
-void __fastcall unlock_data() // retrieves the value of globalVariable
-{
-	std::lock_guard<std::mutex> unlock(globalVariableProtector);
-}
+	// Returns a not found response
+	auto const not_found =
+		[&req](boost::beast::string_view target)
+	{
+		http::response<http::string_body> res{ http::status::not_found, req.version() };
+		res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+		res.set(http::field::content_type, "text/html");
+		res.keep_alive(req.keep_alive());
+		res.body() = "The resource '" + target.to_string() + "' was not found.";
+		res.prepare_payload();
+		return res;
+	};
 
-void __fastcall set_data(std::string set) // sets the value of globalVariable
-{
-	std::lock_guard<std::mutex> lock(globalVariableProtector);
-	raw_data = set;
-}
+	// Returns a server error response
+	auto const server_error =
+		[&req](boost::beast::string_view what)
+	{
+		http::response<http::string_body> res{ http::status::internal_server_error, req.version() };
+		res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+		res.set(http::field::content_type, "text/html");
+		res.keep_alive(req.keep_alive());
+		res.body() = "An error occurred: '" + what.to_string() + "'";
+		res.prepare_payload();
+		return res;
+	};
 
-static std::mutex globalVariableProtector_send;
-std::string raw_data_send = "";
+	// Make sure we can handle the method
+	if (req.method() != http::verb::get &&
+		req.method() != http::verb::head)
+		return send(bad_request("Unknown HTTP-method"));
 
-std::string __fastcall get_data_send() // retrieves the value of globalVariable
-{
-	std::lock_guard<std::mutex> lock(globalVariableProtector_send);
-	return (raw_data_send);
-}
+	// Request path must be absolute and not contain "..".
+	if (req.target().empty() ||
+		req.target()[0] != '/' ||
+		req.target().find("..") != boost::beast::string_view::npos)
+		return send(bad_request("Illegal request-target"));
 
-void __fastcall unlock_data_send() // retrieves the value of globalVariable
-{
-	std::lock_guard<std::mutex> unlock(globalVariableProtector_send);
-}
+	// Build the path to the requested file
+	std::string path = path_cat(doc_root, req.target());
+	if (req.target().back() == '/')
+		path.append("index.html");
 
-void __fastcall set_data_send(
-	std::string set) // sets the value of globalVariable
-{
-	std::lock_guard<std::mutex> lock(globalVariableProtector_send);
-	raw_data_send = set;
-}
+	// Attempt to open the file
+	boost::beast::error_code ec;
+	http::file_body::value_type body;
+	body.open(path.c_str(), boost::beast::file_mode::scan, ec);
 
-static std::mutex globalVariableProtector_echo;
-std::string raw_data_echo = "";
+	// Handle the case where the file doesn't exist
+	if (ec == boost::system::errc::no_such_file_or_directory)
+		return send(not_found(req.target()));
 
-std::string __fastcall get_data_echo() // retrieves the value of globalVariable
-{
-	std::lock_guard<std::mutex> lock(globalVariableProtector_echo);
-	return (raw_data_echo);
-}
+	// Handle an unknown error
+	if (ec)
+		return send(server_error(ec.message()));
 
-void __fastcall unlock_data_echo() // retrieves the value of globalVariable
-{
-	std::lock_guard<std::mutex> unlock(globalVariableProtector_echo);
-}
+	// Cache the size since we need it after the move
+	auto const size = body.size();
 
-void __fastcall set_data_echo(
-	std::string set) // sets the value of globalVariable
-{
-	std::lock_guard<std::mutex> lock(globalVariableProtector_echo);
-	raw_data_echo = set;
-}
-
-static std::mutex globalVariableProtector_localip;
-std::string local_ip_echo = "";
-
-std::string __fastcall get_ip_echo() // retrieves the value of globalVariable
-{
-	std::lock_guard<std::mutex> lock(globalVariableProtector_localip);
-	return (local_ip_echo);
-}
-
-void __fastcall unlock_ip_echo() // retrieves the value of globalVariable
-{
-	std::lock_guard<std::mutex> unlock(globalVariableProtector_localip);
-}
-
-void __fastcall set_ip_echo(
-	std::string set) // sets the value of globalVariable
-{
-	std::lock_guard<std::mutex> lock(globalVariableProtector_localip);
-	local_ip_echo = set;
-}
-
-std::string ReplaceAll(std::string str, const std::string& from,
-	const std::string& to) {
-	size_t start_pos = 0;
-	while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
-		str.replace(start_pos, from.length(), to);
-		start_pos +=
-			to.length(); // Handles case where 'to' is a substring of 'from'
+	// Respond to HEAD request
+	if (req.method() == http::verb::head)
+	{
+		http::response<http::empty_body> res{ http::status::ok, req.version() };
+		res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+		res.set(http::field::content_type, mime_type(path));
+		res.content_length(size);
+		res.keep_alive(req.keep_alive());
+		return send(std::move(res));
 	}
-	return str;
+
+	// Respond to GET request
+	http::response<http::file_body> res{
+		std::piecewise_construct,
+		std::make_tuple(std::move(body)),
+		std::make_tuple(http::status::ok, req.version()) };
+	res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+	res.set(http::field::content_type, mime_type(path));
+	res.content_length(size);
+	res.keep_alive(req.keep_alive());
+	return send(std::move(res));
 }
+
+// Handles an HTTP server connection
+class session_ssl0 : public std::enable_shared_from_this<session_ssl0>
+{
+	// This is the C++11 equivalent of a generic lambda.
+	// The function object is used to send an HTTP message.
+	struct send_lambda
+	{
+		session_ssl0& self_;
+
+		explicit
+			send_lambda(session_ssl0& self)
+			: self_(self)
+		{
+		}
+
+		template<bool isRequest, class Body, class Fields>
+		void
+			operator()(http::message<isRequest, Body, Fields>&& msg) const
+		{
+			// The lifetime of the message has to extend
+			// for the duration of the async operation so
+			// we use a shared_ptr to manage it.
+			auto sp = std::make_shared<
+				http::message<isRequest, Body, Fields>>(std::move(msg));
+
+			// Store a type-erased version of the shared
+			// pointer in the class to keep it alive.
+			self_.res_ = sp;
+
+			// Write the response
+			http::async_write(
+				self_.stream_,
+				*sp,
+				boost::asio::bind_executor(
+					self_.strand_,
+					std::bind(
+						&session_ssl0::on_write,
+						self_.shared_from_this(),
+						std::placeholders::_1,
+						std::placeholders::_2,
+						sp->need_eof())));
+		}
+	};
+
+	tcp::socket socket_;
+	ssl::stream<tcp::socket&> stream_;
+	boost::asio::strand<
+		boost::asio::io_context::executor_type> strand_;
+	boost::beast::flat_buffer buffer_;
+	std::shared_ptr<std::string const> doc_root_;
+	http::request<http::string_body> req_;
+	std::shared_ptr<void> res_;
+	send_lambda lambda_;
+
+public:
+	// Take ownership of the socket
+	explicit
+		session_ssl0(
+			tcp::socket socket,
+			ssl::context& ctx,
+			std::shared_ptr<std::string const> const& doc_root)
+		: socket_(std::move(socket))
+		, stream_(socket_, ctx)
+		, strand_(socket_.get_executor())
+		, doc_root_(doc_root)
+		, lambda_(*this)
+	{
+	}
+
+	// Start the asynchronous operation
+	void
+		run()
+	{
+		std::string current_data = get_ssl_transmit();
+		std::string new_data = current_data + "0";
+
+		unlock_ssl_transmit();
+		set_ssl_transmit(new_data);
+		unlock_ssl_transmit();
+
+		// Perform the SSL handshake
+		stream_.async_handshake(
+			ssl::stream_base::server,
+			boost::asio::bind_executor(
+				strand_,
+				std::bind(
+					&session_ssl0::on_handshake,
+					shared_from_this(),
+					std::placeholders::_1)));
+	}
+
+	void
+		on_handshake(boost::system::error_code ec)
+	{
+		if (ec)
+			return fail(ec, "handshake");
+
+		do_read();
+	}
+
+	void
+		do_read()
+	{
+		// Make the request empty before reading,
+		// otherwise the operation behavior is undefined.
+		req_ = {};
+
+		// Read a request
+		http::async_read(stream_, buffer_, req_,
+			boost::asio::bind_executor(
+				strand_,
+				std::bind(
+					&session_ssl0::on_read,
+					shared_from_this(),
+					std::placeholders::_1,
+					std::placeholders::_2)));
+	}
+
+	void
+		on_read(
+			boost::system::error_code ec,
+			std::size_t bytes_transferred)
+	{
+		boost::ignore_unused(bytes_transferred);
+
+		// This means they closed the connection
+		if (ec == http::error::end_of_stream)
+			return do_close();
+
+		if (ec)
+			return fail(ec, "read");
+
+		// Send the response
+		handle_request_ssl0(*doc_root_, std::move(req_), lambda_);
+	}
+
+	void
+		on_write(
+			boost::system::error_code ec,
+			std::size_t bytes_transferred,
+			bool close)
+	{
+		boost::ignore_unused(bytes_transferred);
+
+		if (ec)
+			return fail(ec, "write");
+
+		if (close)
+		{
+			// This means we should close the connection, usually because
+			// the response indicated the "Connection: close" semantic.
+			return do_close();
+		}
+
+		// We're done with the response so delete it
+		res_ = nullptr;
+
+		// Read another request
+		do_read();
+	}
+
+	void
+		do_close()
+	{
+		// Perform the SSL shutdown
+		stream_.async_shutdown(
+			boost::asio::bind_executor(
+				strand_,
+				std::bind(
+					&session_ssl0::on_shutdown,
+					shared_from_this(),
+					std::placeholders::_1)));
+	}
+
+	void
+		on_shutdown(boost::system::error_code ec)
+	{
+		if (ec)
+			return fail(ec, "shutdown");
+
+		// At this point the connection is closed gracefully
+	}
+};
+
+//------------------------------------------------------------------------------
+
+// Accepts incoming connections and launches the session_ssl0s
+class listener_ssl0 : public std::enable_shared_from_this<listener_ssl0>
+{
+	ssl::context& ctx_;
+	tcp::acceptor acceptor_;
+	tcp::socket socket_;
+	std::shared_ptr<std::string const> doc_root_;
+
+public:
+	listener_ssl0(
+		boost::asio::io_context& ioc,
+		ssl::context& ctx,
+		tcp::endpoint endpoint,
+		std::shared_ptr<std::string const> const& doc_root)
+		: ctx_(ctx)
+		, acceptor_(ioc)
+		, socket_(ioc)
+		, doc_root_(doc_root)
+	{
+		boost::system::error_code ec;
+
+		// Open the acceptor
+		acceptor_.open(endpoint.protocol(), ec);
+		if (ec)
+		{
+			fail(ec, "open");
+			return;
+		}
+
+		// Allow address reuse
+		acceptor_.set_option(boost::asio::socket_base::reuse_address(true), ec);
+		if (ec)
+		{
+			fail(ec, "set_option");
+			return;
+		}
+
+		// Bind to the server address
+		acceptor_.bind(endpoint, ec);
+		if (ec)
+		{
+			fail(ec, "bind");
+			return;
+		}
+
+		// Start listening for connections
+		acceptor_.listen(
+			boost::asio::socket_base::max_listen_connections, ec);
+		if (ec)
+		{
+			fail(ec, "listen");
+			return;
+		}
+	}
+
+	// Start accepting incoming connections
+	void
+		run()
+	{
+		if (!acceptor_.is_open())
+			return;
+		do_accept();
+	}
+
+	void
+		do_accept()
+	{
+		acceptor_.async_accept(
+			socket_,
+			std::bind(
+				&listener_ssl0::on_accept,
+				shared_from_this(),
+				std::placeholders::_1));
+	}
+
+	void
+		on_accept(boost::system::error_code ec)
+	{
+		if (ec)
+		{
+			fail(ec, "accept");
+		}
+		else
+		{
+			// Create the session_ssl0 and run it
+			std::make_shared<session_ssl0>(
+				std::move(socket_),
+				ctx_,
+				doc_root_)->run();
+		}
+
+		// Accept another connection
+		do_accept();
+	}
+};
+
+
+// -------------
+// WEB SERVER CODE ssl0
+// -------------
+// end
+
+
+// -------------
+// WEB SERVER CODE ssl1
+// -------------
+// start
+// https://www.boost.org/doc/libs/1_69_0/libs/beast/example/http/server/async-ssl/http_server_async_ssl.cpp
+
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast/version.hpp>
+#include <boost/asio/bind_executor.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ssl/stream.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/config.hpp>
+#include <algorithm>
+#include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <thread>
+#include <vector>
+
+using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
+namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
+namespace http = boost::beast::http;    // from <boost/beast/http.hpp>
+
+
+// This function produces an HTTP response for the given
+// request. The type of the response object depends on the
+// contents of the request, so the interface requires the
+// caller to pass a generic lambda for receiving the response.
+template<
+	class Body, class Allocator,
+	class Send>
+	void
+	handle_request_ssl1(
+		boost::beast::string_view doc_root,
+		http::request<Body, http::basic_fields<Allocator>>&& req,
+		Send&& send)
+{
+	// Returns a bad request response
+	auto const bad_request =
+		[&req](boost::beast::string_view why)
+	{
+		http::response<http::string_body> res{ http::status::bad_request, req.version() };
+		res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+		res.set(http::field::content_type, "text/html");
+		res.keep_alive(req.keep_alive());
+		res.body() = why.to_string();
+		res.prepare_payload();
+		return res;
+	};
+
+	// Returns a not found response
+	auto const not_found =
+		[&req](boost::beast::string_view target)
+	{
+		http::response<http::string_body> res{ http::status::not_found, req.version() };
+		res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+		res.set(http::field::content_type, "text/html");
+		res.keep_alive(req.keep_alive());
+		res.body() = "The resource '" + target.to_string() + "' was not found.";
+		res.prepare_payload();
+		return res;
+	};
+
+	// Returns a server error response
+	auto const server_error =
+		[&req](boost::beast::string_view what)
+	{
+		http::response<http::string_body> res{ http::status::internal_server_error, req.version() };
+		res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+		res.set(http::field::content_type, "text/html");
+		res.keep_alive(req.keep_alive());
+		res.body() = "An error occurred: '" + what.to_string() + "'";
+		res.prepare_payload();
+		return res;
+	};
+
+	// Make sure we can handle the method
+	if (req.method() != http::verb::get &&
+		req.method() != http::verb::head)
+		return send(bad_request("Unknown HTTP-method"));
+
+	// Request path must be absolute and not contain "..".
+	if (req.target().empty() ||
+		req.target()[0] != '/' ||
+		req.target().find("..") != boost::beast::string_view::npos)
+		return send(bad_request("Illegal request-target"));
+
+	// Build the path to the requested file
+	std::string path = path_cat(doc_root, req.target());
+	if (req.target().back() == '/')
+		path.append("index.html");
+
+	// Attempt to open the file
+	boost::beast::error_code ec;
+	http::file_body::value_type body;
+	body.open(path.c_str(), boost::beast::file_mode::scan, ec);
+
+	// Handle the case where the file doesn't exist
+	if (ec == boost::system::errc::no_such_file_or_directory)
+		return send(not_found(req.target()));
+
+	// Handle an unknown error
+	if (ec)
+		return send(server_error(ec.message()));
+
+	// Cache the size since we need it after the move
+	auto const size = body.size();
+
+	// Respond to HEAD request
+	if (req.method() == http::verb::head)
+	{
+		http::response<http::empty_body> res{ http::status::ok, req.version() };
+		res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+		res.set(http::field::content_type, mime_type(path));
+		res.content_length(size);
+		res.keep_alive(req.keep_alive());
+		return send(std::move(res));
+	}
+
+	// Respond to GET request
+	http::response<http::file_body> res{
+		std::piecewise_construct,
+		std::make_tuple(std::move(body)),
+		std::make_tuple(http::status::ok, req.version()) };
+	res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+	res.set(http::field::content_type, mime_type(path));
+	res.content_length(size);
+	res.keep_alive(req.keep_alive());
+	return send(std::move(res));
+}
+
+// Handles an HTTP server connection
+class session_ssl1 : public std::enable_shared_from_this<session_ssl1>
+{
+	// This is the C++11 equivalent of a generic lambda.
+	// The function object is used to send an HTTP message.
+	struct send_lambda
+	{
+		session_ssl1& self_;
+
+		explicit
+			send_lambda(session_ssl1& self)
+			: self_(self)
+		{
+		}
+
+		template<bool isRequest, class Body, class Fields>
+		void
+			operator()(http::message<isRequest, Body, Fields>&& msg) const
+		{
+			// The lifetime of the message has to extend
+			// for the duration of the async operation so
+			// we use a shared_ptr to manage it.
+			auto sp = std::make_shared<
+				http::message<isRequest, Body, Fields>>(std::move(msg));
+
+			// Store a type-erased version of the shared
+			// pointer in the class to keep it alive.
+			self_.res_ = sp;
+
+			// Write the response
+			http::async_write(
+				self_.stream_,
+				*sp,
+				boost::asio::bind_executor(
+					self_.strand_,
+					std::bind(
+						&session_ssl1::on_write,
+						self_.shared_from_this(),
+						std::placeholders::_1,
+						std::placeholders::_2,
+						sp->need_eof())));
+		}
+	};
+
+	tcp::socket socket_;
+	ssl::stream<tcp::socket&> stream_;
+	boost::asio::strand<
+		boost::asio::io_context::executor_type> strand_;
+	boost::beast::flat_buffer buffer_;
+	std::shared_ptr<std::string const> doc_root_;
+	http::request<http::string_body> req_;
+	std::shared_ptr<void> res_;
+	send_lambda lambda_;
+
+public:
+	// Take ownership of the socket
+	explicit
+		session_ssl1(
+			tcp::socket socket,
+			ssl::context& ctx,
+			std::shared_ptr<std::string const> const& doc_root)
+		: socket_(std::move(socket))
+		, stream_(socket_, ctx)
+		, strand_(socket_.get_executor())
+		, doc_root_(doc_root)
+		, lambda_(*this)
+	{
+	}
+
+	// Start the asynchronous operation
+	void
+		run()
+	{
+		std::string current_data = get_ssl_transmit();
+		std::string new_data = current_data + "1";
+
+		unlock_ssl_transmit();
+		set_ssl_transmit(new_data);
+		unlock_ssl_transmit();
+
+		// Perform the SSL handshake
+		stream_.async_handshake(
+			ssl::stream_base::server,
+			boost::asio::bind_executor(
+				strand_,
+				std::bind(
+					&session_ssl1::on_handshake,
+					shared_from_this(),
+					std::placeholders::_1)));
+	}
+
+	void
+		on_handshake(boost::system::error_code ec)
+	{
+		if (ec)
+			return fail(ec, "handshake");
+
+		do_read();
+	}
+
+	void
+		do_read()
+	{
+		// Make the request empty before reading,
+		// otherwise the operation behavior is undefined.
+		req_ = {};
+
+		// Read a request
+		http::async_read(stream_, buffer_, req_,
+			boost::asio::bind_executor(
+				strand_,
+				std::bind(
+					&session_ssl1::on_read,
+					shared_from_this(),
+					std::placeholders::_1,
+					std::placeholders::_2)));
+	}
+
+	void
+		on_read(
+			boost::system::error_code ec,
+			std::size_t bytes_transferred)
+	{
+		boost::ignore_unused(bytes_transferred);
+
+		// This means they closed the connection
+		if (ec == http::error::end_of_stream)
+			return do_close();
+
+		if (ec)
+			return fail(ec, "read");
+
+		// Send the response
+		handle_request_ssl1(*doc_root_, std::move(req_), lambda_);
+	}
+
+	void
+		on_write(
+			boost::system::error_code ec,
+			std::size_t bytes_transferred,
+			bool close)
+	{
+		boost::ignore_unused(bytes_transferred);
+
+		if (ec)
+			return fail(ec, "write");
+
+		if (close)
+		{
+			// This means we should close the connection, usually because
+			// the response indicated the "Connection: close" semantic.
+			return do_close();
+		}
+
+		// We're done with the response so delete it
+		res_ = nullptr;
+
+		// Read another request
+		do_read();
+	}
+
+	void
+		do_close()
+	{
+		// Perform the SSL shutdown
+		stream_.async_shutdown(
+			boost::asio::bind_executor(
+				strand_,
+				std::bind(
+					&session_ssl1::on_shutdown,
+					shared_from_this(),
+					std::placeholders::_1)));
+	}
+
+	void
+		on_shutdown(boost::system::error_code ec)
+	{
+		if (ec)
+			return fail(ec, "shutdown");
+
+		// At this point the connection is closed gracefully
+	}
+};
+
+//------------------------------------------------------------------------------
+
+// Accepts incoming connections and launches the session_ssl1s
+class listener_ssl1 : public std::enable_shared_from_this<listener_ssl1>
+{
+	ssl::context& ctx_;
+	tcp::acceptor acceptor_;
+	tcp::socket socket_;
+	std::shared_ptr<std::string const> doc_root_;
+
+public:
+	listener_ssl1(
+		boost::asio::io_context& ioc,
+		ssl::context& ctx,
+		tcp::endpoint endpoint,
+		std::shared_ptr<std::string const> const& doc_root)
+		: ctx_(ctx)
+		, acceptor_(ioc)
+		, socket_(ioc)
+		, doc_root_(doc_root)
+	{
+		boost::system::error_code ec;
+
+		// Open the acceptor
+		acceptor_.open(endpoint.protocol(), ec);
+		if (ec)
+		{
+			fail(ec, "open");
+			return;
+		}
+
+		// Allow address reuse
+		acceptor_.set_option(boost::asio::socket_base::reuse_address(true), ec);
+		if (ec)
+		{
+			fail(ec, "set_option");
+			return;
+		}
+
+		// Bind to the server address
+		acceptor_.bind(endpoint, ec);
+		if (ec)
+		{
+			fail(ec, "bind");
+			return;
+		}
+
+		// Start listening for connections
+		acceptor_.listen(
+			boost::asio::socket_base::max_listen_connections, ec);
+		if (ec)
+		{
+			fail(ec, "listen");
+			return;
+		}
+	}
+
+	// Start accepting incoming connections
+	void
+		run()
+	{
+		if (!acceptor_.is_open())
+			return;
+		do_accept();
+	}
+
+	void
+		do_accept()
+	{
+		acceptor_.async_accept(
+			socket_,
+			std::bind(
+				&listener_ssl1::on_accept,
+				shared_from_this(),
+				std::placeholders::_1));
+	}
+
+	void
+		on_accept(boost::system::error_code ec)
+	{
+		if (ec)
+		{
+			fail(ec, "accept");
+		}
+		else
+		{
+			// Create the session_ssl1 and run it
+			std::make_shared<session_ssl1>(
+				std::move(socket_),
+				ctx_,
+				doc_root_)->run();
+		}
+
+		// Accept another connection
+		do_accept();
+	}
+};
+
+
+// -------------
+// WEB SERVER CODE ssl1
+// -------------
+// end
+
+
+// -------------
+// WEB SERVER CODE sslconfirm
+// -------------
+// start
+// https://www.boost.org/doc/libs/1_69_0/libs/beast/example/http/server/async-ssl/http_server_async_ssl.cpp
+
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast/version.hpp>
+#include <boost/asio/bind_executor.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ssl/stream.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/config.hpp>
+#include <algorithm>
+#include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <thread>
+#include <vector>
+
+using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
+namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
+namespace http = boost::beast::http;    // from <boost/beast/http.hpp>
+
+
+// This function produces an HTTP response for the given
+// request. The type of the response object depends on the
+// contents of the request, so the interface requires the
+// caller to pass a generic lambda for receiving the response.
+template<
+	class Body, class Allocator,
+	class Send>
+	void
+	handle_request_sslconfirm(
+		boost::beast::string_view doc_root,
+		http::request<Body, http::basic_fields<Allocator>>&& req,
+		Send&& send)
+{
+	// Returns a bad request response
+	auto const bad_request =
+		[&req](boost::beast::string_view why)
+	{
+		http::response<http::string_body> res{ http::status::bad_request, req.version() };
+		res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+		res.set(http::field::content_type, "text/html");
+		res.keep_alive(req.keep_alive());
+		res.body() = why.to_string();
+		res.prepare_payload();
+		return res;
+	};
+
+	// Returns a not found response
+	auto const not_found =
+		[&req](boost::beast::string_view target)
+	{
+		http::response<http::string_body> res{ http::status::not_found, req.version() };
+		res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+		res.set(http::field::content_type, "text/html");
+		res.keep_alive(req.keep_alive());
+		res.body() = "The resource '" + target.to_string() + "' was not found.";
+		res.prepare_payload();
+		return res;
+	};
+
+	// Returns a server error response
+	auto const server_error =
+		[&req](boost::beast::string_view what)
+	{
+		http::response<http::string_body> res{ http::status::internal_server_error, req.version() };
+		res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+		res.set(http::field::content_type, "text/html");
+		res.keep_alive(req.keep_alive());
+		res.body() = "An error occurred: '" + what.to_string() + "'";
+		res.prepare_payload();
+		return res;
+	};
+
+	// Make sure we can handle the method
+	if (req.method() != http::verb::get &&
+		req.method() != http::verb::head)
+		return send(bad_request("Unknown HTTP-method"));
+
+	// Request path must be absolute and not contain "..".
+	if (req.target().empty() ||
+		req.target()[0] != '/' ||
+		req.target().find("..") != boost::beast::string_view::npos)
+		return send(bad_request("Illegal request-target"));
+
+	// Build the path to the requested file
+	std::string path = path_cat(doc_root, req.target());
+	if (req.target().back() == '/')
+		path.append("index.html");
+
+	// Attempt to open the file
+	boost::beast::error_code ec;
+	http::file_body::value_type body;
+	body.open(path.c_str(), boost::beast::file_mode::scan, ec);
+
+	// Handle the case where the file doesn't exist
+	if (ec == boost::system::errc::no_such_file_or_directory)
+		return send(not_found(req.target()));
+
+	// Handle an unknown error
+	if (ec)
+		return send(server_error(ec.message()));
+
+	// Cache the size since we need it after the move
+	auto const size = body.size();
+
+	// Respond to HEAD request
+	if (req.method() == http::verb::head)
+	{
+		http::response<http::empty_body> res{ http::status::ok, req.version() };
+		res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+		res.set(http::field::content_type, mime_type(path));
+		res.content_length(size);
+		res.keep_alive(req.keep_alive());
+		return send(std::move(res));
+	}
+
+	// Respond to GET request
+	http::response<http::file_body> res{
+		std::piecewise_construct,
+		std::make_tuple(std::move(body)),
+		std::make_tuple(http::status::ok, req.version()) };
+	res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+	res.set(http::field::content_type, mime_type(path));
+	res.content_length(size);
+	res.keep_alive(req.keep_alive());
+	return send(std::move(res));
+}
+
+// Handles an HTTP server connection
+class session_sslconfirm : public std::enable_shared_from_this<session_sslconfirm>
+{
+	// This is the C++11 equivalent of a generic lambda.
+	// The function object is used to send an HTTP message.
+	struct send_lambda
+	{
+		session_sslconfirm& self_;
+
+		explicit
+			send_lambda(session_sslconfirm& self)
+			: self_(self)
+		{
+		}
+
+		template<bool isRequest, class Body, class Fields>
+		void
+			operator()(http::message<isRequest, Body, Fields>&& msg) const
+		{
+			// The lifetime of the message has to extend
+			// for the duration of the async operation so
+			// we use a shared_ptr to manage it.
+			auto sp = std::make_shared<
+				http::message<isRequest, Body, Fields>>(std::move(msg));
+
+			// Store a type-erased version of the shared
+			// pointer in the class to keep it alive.
+			self_.res_ = sp;
+
+			// Write the response
+			http::async_write(
+				self_.stream_,
+				*sp,
+				boost::asio::bind_executor(
+					self_.strand_,
+					std::bind(
+						&session_sslconfirm::on_write,
+						self_.shared_from_this(),
+						std::placeholders::_1,
+						std::placeholders::_2,
+						sp->need_eof())));
+		}
+	};
+
+	tcp::socket socket_;
+	ssl::stream<tcp::socket&> stream_;
+	boost::asio::strand<
+		boost::asio::io_context::executor_type> strand_;
+	boost::beast::flat_buffer buffer_;
+	std::shared_ptr<std::string const> doc_root_;
+	http::request<http::string_body> req_;
+	std::shared_ptr<void> res_;
+	send_lambda lambda_;
+
+public:
+	// Take ownership of the socket
+	explicit
+		session_sslconfirm(
+			tcp::socket socket,
+			ssl::context& ctx,
+			std::shared_ptr<std::string const> const& doc_root)
+		: socket_(std::move(socket))
+		, stream_(socket_, ctx)
+		, strand_(socket_.get_executor())
+		, doc_root_(doc_root)
+		, lambda_(*this)
+	{
+	}
+
+	// Start the asynchronous operation
+	void
+		run()
+	{
+		//std::string current_data = get_ssl_transmit();
+		//set_data_echo(current_data);
+		//unlock_data_echo();
+
+
+		//unlock_ssl_transmit();
+		//set_ssl_transmit("");
+		//unlock_ssl_transmit();
+
+		std::string current_data = get_ssl_transmit();
+		std::string new_data = current_data;
+
+		unlock_ssl_transmit();
+
+		if (new_data.length() > 8) {
+			std::stringstream sstream(new_data);
+			std::string output = "";
+			while (sstream.good())
+			{
+				std::bitset<8> bits;
+				sstream >> bits;
+				auto char_code = bits.to_ulong();
+				if (char_code > 0 && char_code < 128) {
+					char c = char(char_code);
+					output += c;
+				}
+			}
+
+			output = ReplaceAll(output, "\\", "\\\\");
+			output = ReplaceAll(output, "\"", "\\\"");
+
+			set_data_echo(output);
+			unlock_data_echo();
+		}
+
+		set_ssl_transmit("");
+		unlock_ssl_transmit();
+
+		// Perform the SSL handshake
+		stream_.async_handshake(
+			ssl::stream_base::server,
+			boost::asio::bind_executor(
+				strand_,
+				std::bind(
+					&session_sslconfirm::on_handshake,
+					shared_from_this(),
+					std::placeholders::_1)));
+	}
+
+	void
+		on_handshake(boost::system::error_code ec)
+	{
+		if (ec)
+			return fail(ec, "handshake");
+
+		do_read();
+	}
+
+	void
+		do_read()
+	{
+		// Make the request empty before reading,
+		// otherwise the operation behavior is undefined.
+		req_ = {};
+
+		// Read a request
+		http::async_read(stream_, buffer_, req_,
+			boost::asio::bind_executor(
+				strand_,
+				std::bind(
+					&session_sslconfirm::on_read,
+					shared_from_this(),
+					std::placeholders::_1,
+					std::placeholders::_2)));
+	}
+
+	void
+		on_read(
+			boost::system::error_code ec,
+			std::size_t bytes_transferred)
+	{
+		boost::ignore_unused(bytes_transferred);
+
+		// This means they closed the connection
+		if (ec == http::error::end_of_stream)
+			return do_close();
+
+		if (ec)
+			return fail(ec, "read");
+
+		// Send the response
+		handle_request_sslconfirm(*doc_root_, std::move(req_), lambda_);
+	}
+
+	void
+		on_write(
+			boost::system::error_code ec,
+			std::size_t bytes_transferred,
+			bool close)
+	{
+		boost::ignore_unused(bytes_transferred);
+
+		if (ec)
+			return fail(ec, "write");
+
+		if (close)
+		{
+			// This means we should close the connection, usually because
+			// the response indicated the "Connection: close" semantic.
+			return do_close();
+		}
+
+		// We're done with the response so delete it
+		res_ = nullptr;
+
+		// Read another request
+		do_read();
+	}
+
+	void
+		do_close()
+	{
+		// Perform the SSL shutdown
+		stream_.async_shutdown(
+			boost::asio::bind_executor(
+				strand_,
+				std::bind(
+					&session_sslconfirm::on_shutdown,
+					shared_from_this(),
+					std::placeholders::_1)));
+	}
+
+	void
+		on_shutdown(boost::system::error_code ec)
+	{
+		if (ec)
+			return fail(ec, "shutdown");
+
+		// At this point the connection is closed gracefully
+	}
+};
+
+//------------------------------------------------------------------------------
+
+// Accepts incoming connections and launches the session_sslconfirms
+class listener_sslconfirm : public std::enable_shared_from_this<listener_sslconfirm>
+{
+	ssl::context& ctx_;
+	tcp::acceptor acceptor_;
+	tcp::socket socket_;
+	std::shared_ptr<std::string const> doc_root_;
+
+public:
+	listener_sslconfirm(
+		boost::asio::io_context& ioc,
+		ssl::context& ctx,
+		tcp::endpoint endpoint,
+		std::shared_ptr<std::string const> const& doc_root)
+		: ctx_(ctx)
+		, acceptor_(ioc)
+		, socket_(ioc)
+		, doc_root_(doc_root)
+	{
+		boost::system::error_code ec;
+
+		// Open the acceptor
+		acceptor_.open(endpoint.protocol(), ec);
+		if (ec)
+		{
+			fail(ec, "open");
+			return;
+		}
+
+		// Allow address reuse
+		acceptor_.set_option(boost::asio::socket_base::reuse_address(true), ec);
+		if (ec)
+		{
+			fail(ec, "set_option");
+			return;
+		}
+
+		// Bind to the server address
+		acceptor_.bind(endpoint, ec);
+		if (ec)
+		{
+			fail(ec, "bind");
+			return;
+		}
+
+		// Start listening for connections
+		acceptor_.listen(
+			boost::asio::socket_base::max_listen_connections, ec);
+		if (ec)
+		{
+			fail(ec, "listen");
+			return;
+		}
+	}
+
+	// Start accepting incoming connections
+	void
+		run()
+	{
+		if (!acceptor_.is_open())
+			return;
+		do_accept();
+	}
+
+	void
+		do_accept()
+	{
+		acceptor_.async_accept(
+			socket_,
+			std::bind(
+				&listener_sslconfirm::on_accept,
+				shared_from_this(),
+				std::placeholders::_1));
+	}
+
+	void
+		on_accept(boost::system::error_code ec)
+	{
+		if (ec)
+		{
+			fail(ec, "accept");
+		}
+		else
+		{
+			// Create the session_sslconfirm and run it
+			std::make_shared<session_sslconfirm>(
+				std::move(socket_),
+				ctx_,
+				doc_root_)->run();
+		}
+
+		// Accept another connection
+		do_accept();
+	}
+};
+
+
+// -------------
+// WEB SERVER CODE sslconfirm
+// -------------
+// end
+
 
 // -------------
 // WEB SOCKET CODE
@@ -832,8 +2145,9 @@ public:
 				unlock_data();
 			}
 			else {
-				std::string new_echo;
-				new_echo = ReplaceAll(message, "\"", "\\\"");
+				std::string new_echo = message;
+				new_echo = ReplaceAll(new_echo, "\\", "\\\\");
+				new_echo = ReplaceAll(new_echo, "\"", "\\\"");
 
 				set_data_echo(new_echo);
 				unlock_data_echo();
@@ -1135,6 +2449,155 @@ int multithreadServer_web() {
 	return 0;
 }
 
+int multithreadServer_ssl0() {
+	auto directory = GetExePath();
+	auto doc_pre = std::string("\\..\\..\\drivers\\");
+	auto driver_name = std::string("websocket_trackers");
+	auto doc_post = std::string("\\resources\\webserver\\");
+	auto combined_string = directory + doc_pre + driver_name + doc_post;
+
+	std::filesystem::path web_dir_path(combined_string);
+
+	auto compiled_path = std::string(web_dir_path.lexically_normal().string());
+
+	auto doc_root = std::make_shared<std::string>(compiled_path);
+
+	int const threads = 5;
+
+	auto const address = boost::asio::ip::make_address("0.0.0.0");
+	auto const port = static_cast<unsigned short>(8090);
+
+
+	// The io_context is required for all I/O
+	boost::asio::io_context ioc{ threads };
+
+	// The SSL context is required, and holds certificates
+	ssl::context ctx{ ssl::context::sslv23 };
+
+	// This holds the self-signed certificate used by the server
+	load_server_certificate(ctx);
+
+	// Create and launch a listening port
+	std::make_shared<listener_ssl0>(
+		ioc,
+		ctx,
+		tcp::endpoint{ address, port },
+		doc_root)->run();
+
+	// Run the I/O service on the requested number of threads
+	std::vector<std::thread> v;
+	v.reserve(threads - 1);
+	for (auto i = threads - 1; i > 0; --i)
+		v.emplace_back(
+			[&ioc]
+			{
+				ioc.run();
+			});
+	ioc.run();
+
+	return 0;
+}
+
+int multithreadServer_ssl1() {
+	auto directory = GetExePath();
+	auto doc_pre = std::string("\\..\\..\\drivers\\");
+	auto driver_name = std::string("websocket_trackers");
+	auto doc_post = std::string("\\resources\\webserver\\");
+	auto combined_string = directory + doc_pre + driver_name + doc_post;
+
+	std::filesystem::path web_dir_path(combined_string);
+
+	auto compiled_path = std::string(web_dir_path.lexically_normal().string());
+
+	auto doc_root = std::make_shared<std::string>(compiled_path);
+
+	int const threads = 5;
+
+	auto const address = boost::asio::ip::make_address("0.0.0.0");
+	auto const port = static_cast<unsigned short>(8091);
+
+
+	// The io_context is required for all I/O
+	boost::asio::io_context ioc{ threads };
+
+	// The SSL context is required, and holds certificates
+	ssl::context ctx{ ssl::context::sslv23 };
+
+	// This holds the self-signed certificate used by the server
+	load_server_certificate(ctx);
+
+	// Create and launch a listening port
+	std::make_shared<listener_ssl1>(
+		ioc,
+		ctx,
+		tcp::endpoint{ address, port },
+		doc_root)->run();
+
+	// Run the I/O service on the requested number of threads
+	std::vector<std::thread> v;
+	v.reserve(threads - 1);
+	for (auto i = threads - 1; i > 0; --i)
+		v.emplace_back(
+			[&ioc]
+			{
+				ioc.run();
+			});
+	ioc.run();
+
+	return 0;
+}
+
+int multithreadServer_sslconfirm() {
+	auto directory = GetExePath();
+	auto doc_pre = std::string("\\..\\..\\drivers\\");
+	auto driver_name = std::string("websocket_trackers");
+	auto doc_post = std::string("\\resources\\webserver\\");
+	auto combined_string = directory + doc_pre + driver_name + doc_post;
+
+	std::filesystem::path web_dir_path(combined_string);
+
+	auto compiled_path = std::string(web_dir_path.lexically_normal().string());
+
+	auto doc_root = std::make_shared<std::string>(compiled_path);
+
+	int const threads = 1;
+
+	auto const address = boost::asio::ip::make_address("0.0.0.0");
+	auto const port = static_cast<unsigned short>(8089);
+
+
+	// The io_context is required for all I/O
+	boost::asio::io_context ioc{ threads };
+
+	// The SSL context is required, and holds certificates
+	ssl::context ctx{ ssl::context::sslv23 };
+
+	// This holds the self-signed certificate used by the server
+	load_server_certificate(ctx);
+
+	// Create and launch a listening port
+	std::make_shared<listener_sslconfirm>(
+		ioc,
+		ctx,
+		tcp::endpoint{ address, port },
+		doc_root)->run();
+
+	// Run the I/O service on the requested number of threads
+	std::vector<std::thread> v;
+	v.reserve(threads - 1);
+	for (auto i = threads - 1; i > 0; --i)
+		v.emplace_back(
+			[&ioc]
+			{
+				ioc.run();
+			});
+	ioc.run();
+
+	return 0;
+}
+
+
+
 void startServer() {
 	static bool running = FALSE;
 	if (!running) {
@@ -1146,6 +2609,9 @@ void startServer() {
 
 		boost::thread* thread = new boost::thread(&multithreadServer_ws);
 		boost::thread* thread_web = new boost::thread(&multithreadServer_web);
+		boost::thread* thread_ssl0 = new boost::thread(&multithreadServer_ssl0);
+		boost::thread* thread_ssl1 = new boost::thread(&multithreadServer_ssl1);
+		boost::thread* thread_sslconfirm = new boost::thread(&multithreadServer_sslconfirm);
 	}
 }
 

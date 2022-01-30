@@ -44,10 +44,10 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/driver_files/src" PREFIX "Source 
 set_property(TARGET "${websocket_trackers_PROJECT}" PROPERTY CXX_STANDARD 17)
 
 # OpenSSL support (uncomment below)
-# target_link_directories("${websocket_trackers_PROJECT}" PUBLIC "C:/Program Files/OpenSSL-Win64/lib")
-# target_include_directories("${websocket_trackers_PROJECT}" PUBLIC "C:/Program Files/OpenSSL-Win64/include")
-# find_package(OpenSSL REQUIRED)
-# target_link_libraries("${websocket_trackers_PROJECT}" PUBLIC OpenSSL::SSL)
+target_link_directories("${websocket_trackers_PROJECT}" PUBLIC "C:/Program Files/OpenSSL-Win64/lib")
+target_include_directories("${websocket_trackers_PROJECT}" PUBLIC "C:/Program Files/OpenSSL-Win64/include")
+find_package(OpenSSL REQUIRED)
+target_link_libraries("${websocket_trackers_PROJECT}" PUBLIC OpenSSL::SSL)
 
 
 # Copy driver assets to output folder
