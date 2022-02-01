@@ -4,11 +4,12 @@ It also echoes back the position of all currently active VR devices, allowing yo
 
 This is desirable as it allows simple applications (such as web based applications) to interface with SteamVR without the hassle of setting up their own driver.
 
-The driver also hosts a simple webserver, which serves the files in `/resources/webserver` on port 8088.  
-This can be accessed from: [http://localhost:8088](http://localhost:8088), which serves `/resources/webserver/index.html`.  
+The driver also hosts a simple HTTP webserver, which serves the files in `/resources/webserver` on port 12101.  
+This can be accessed from: [http://localhost:12101](http://localhost:12101), which serves `/resources/webserver/index.html`.  
 
 
-The driver also hosts 3 additional pseudo-https (non-trusted certificate) webservers, which serves the files in `/resources/webserver` on port 8089/8090/8091. By sending requests to these in binary (8090 = 0, 8091 = 1, 8089 = end) you can remotely store data in the echo value on the websocket. An example of this is included in `send-echo-ssl.js`.  
+The driver also hosts 7 additional HTTPS servers with non-trusted certificates, which serve the files in `/resources/webserver`.
+By sending requests to these in binary you can remotely set/get data stored in the echo value on the websocket. An example of this and the port numbers are included in `ServerMessaging.js`.  
 
 This is built upon the work of [terminal29's](https://github.com/terminal29) ["Simple-OpenVR-Driver-Tutorial"](https://github.com/terminal29/Simple-OpenVR-Driver-Tutorial), the license for which is found at the bottom of this document.
 
@@ -26,7 +27,7 @@ and copy the `websocket_trackers` directory into the SteamVR drivers directory.
 
 # Websocket server
 The websocket server is hosted on port 8082, and can be connected to at:  
-`ws://127.0.0.1:8082`
+`ws://127.0.0.1:12100`
 
 ## Creating/updating trackers
 Commands are sent using a JSON object in the format:  
@@ -77,11 +78,11 @@ If you would like to test this out, please do the following.
 
 - Install the driver (from the releases or build it yourself using below instructions)
 - Start SteamVR
-- Navigate to [http://localhost:8088](http://localhost:8088)
+- Navigate to [http://localhost:12101](http://localhost:12101)
 - Open a console and paste and run the following:
 ```js
 // Create WebSocket connection.
-const socket = new WebSocket('ws://127.0.0.1:8082');
+const socket = new WebSocket('ws://127.0.0.1:12100');
 
 // Connection opened
 socket.addEventListener('open', function (event) {

@@ -76,3 +76,5 @@ add_custom_command(
 
 # LIBRARY DIRECTORY
 # $(ProjectDir)libraries\boost_1_69_0;$(ProjectDir)libraries;$(LibraryPath)
+
+add_definitions(/bigobj)
