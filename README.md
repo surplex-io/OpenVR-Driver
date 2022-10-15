@@ -26,7 +26,7 @@ and copy the `websocket_trackers` directory into the SteamVR drivers directory.
 ---
 
 # Websocket server
-The websocket server is hosted on port 8082, and can be connected to at:  
+The websocket server is hosted on port 12100, and can be connected to at:  
 `ws://127.0.0.1:12100`
 
 ## Creating/updating trackers
