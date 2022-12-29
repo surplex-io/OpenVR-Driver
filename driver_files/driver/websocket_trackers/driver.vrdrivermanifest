@@ -3,6 +3,5 @@
 	"name" : "websocket_trackers",
 	"directory" : "",
 	"resourceOnly" : false,
-	"prefersUpperDeviceIndices" :  true,
 	"hmd_presence" : ["*.*"]
 }
