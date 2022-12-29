@@ -1,9 +1,14 @@
 #include "TrackerDevice.hpp"
 #include <Windows.h>
 
-websocket_trackersDriver::TrackerDevice::TrackerDevice(std::string serial):
-    serial_(serial)
+websocket_trackersDriver::TrackerDevice::TrackerDevice(std::string serial, int deviceId, std::string role):
+    serial_(serial), 
+    role_(role),
+    deviceId_(deviceId)
+
 {
+    this->last_pose_ = MakeDefaultPose();
+    this->isSetup = false;
 }
 
 std::string websocket_trackersDriver::TrackerDevice::GetSerial()
@@ -55,8 +60,9 @@ void websocket_trackersDriver::TrackerDevice::Update()
 	}
 
 	//Code to create a pose for the device, ideally by matching the index from the serial vector with the index of the pose vector
-	auto raw_pose = IVRDevice::MakeDefaultPose();
-	auto& pose = raw_pose;
+	//auto raw_pose = IVRDevice::MakeDefaultPose();
+    auto pose = this->last_pose_;
+	//auto& pose = this->last_pose_;
 	if (device_index >= 0) {
 		auto& all_poses = GetDriver()->GetAllPoses();
 		int i = 0;
@@ -125,21 +131,15 @@ vr::TrackedDeviceIndex_t websocket_trackersDriver::TrackerDevice::GetDeviceIndex
 
 vr::EVRInitError websocket_trackersDriver::TrackerDevice::Activate(uint32_t unObjectId)
 {
-    this->device_index_ = unObjectId;
+    this->device_index_ = 10;
 
     GetDriver()->Log("Activating tracker " + this->serial_);
 
     // Get the properties handle
     auto props = GetDriver()->GetProperties()->TrackedDeviceToPropertyContainer(this->device_index_);
 
-    // Setup inputs and outputs
-    GetDriver()->GetInput()->CreateHapticComponent(props, "/output/haptic", &this->haptic_component_);
-
-    GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/system/click", &this->system_click_component_);
-    GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/system/touch", &this->system_touch_component_);
-
     // Set some universe ID (Must be 2 or higher)
-    GetDriver()->GetProperties()->SetUint64Property(props, vr::Prop_CurrentUniverseId_Uint64, 2);
+    GetDriver()->GetProperties()->SetUint64Property(props, vr::Prop_CurrentUniverseId_Uint64, 3);
     
     // Set up a model "number" (not needed but good to have)
     GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_ModelNumber_String, "websocket_trackers_tracker");
@@ -148,10 +148,10 @@ vr::EVRInitError websocket_trackersDriver::TrackerDevice::Activate(uint32_t unOb
     GetDriver()->GetProperties()->SetInt32Property(props, vr::Prop_ControllerRoleHint_Int32, vr::ETrackedControllerRole::TrackedControllerRole_OptOut);
 
     // Set up a render model path
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_RenderModelName_String, "../../drivers/htc/resources/rendermodels/vr_tracker_vive_3_0");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_RenderModelName_String, "{htc}/rendermodels/vr_tracker_vive_1_0");
 
     // Set controller profile
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_InputProfilePath_String, "{websocket_trackers}/input/websocket_trackers_tracker_bindings.json");
+//    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_InputProfilePath_String, "{websocket_trackers}/input/websocket_trackers_tracker_bindings.json");
 
     // Set the icon
     GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceReady_String, "{websocket_trackers}/icons/tracker_ready.png");
@@ -163,6 +163,26 @@ vr::EVRInitError websocket_trackersDriver::TrackerDevice::Activate(uint32_t unOb
     GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceNotReady_String, "{websocket_trackers}/icons/tracker_not_ready.png");
     GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceStandby_String, "{websocket_trackers}/icons/tracker_not_ready.png");
     GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceAlertLow_String, "{websocket_trackers}/icons/tracker_not_ready.png");
+
+
+    std::string rolehint = "vive_tracker";
+    if (role_ == "TrackerRole_LeftFoot")
+        rolehint = "vive_tracker_left_foot";
+    else if (role_ == "TrackerRole_RightFoot")
+        rolehint = "vive_tracker_right_foot";
+    else if (role_ == "TrackerRole_Waist")
+        rolehint = "vive_tracker_waist";
+
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_ControllerType_String, rolehint.c_str());
+
+    vr::VRProperties()->SetInt32Property(props, vr::Prop_DeviceClass_Int32, vr::TrackedDeviceClass_GenericTracker);
+    vr::VRProperties()->SetInt32Property(props, vr::Prop_ControllerHandSelectionPriority_Int32, -1);
+
+    std::string l_registeredDevice("/devices/websocket_trackers/");
+    l_registeredDevice.append(serial_);
+
+    vr::VRSettings()->SetString(vr::k_pch_Trackers_Section, l_registeredDevice.c_str(), role_.c_str());
+
 
     return vr::EVRInitError::VRInitError_None;
 }
@@ -190,4 +210,10 @@ void websocket_trackersDriver::TrackerDevice::DebugRequest(const char* pchReques
 vr::DriverPose_t websocket_trackersDriver::TrackerDevice::GetPose()
 {
     return last_pose_;
+}
+
+
+int websocket_trackersDriver::TrackerDevice::getDeviceId()
+{
+    return deviceId_;
 }

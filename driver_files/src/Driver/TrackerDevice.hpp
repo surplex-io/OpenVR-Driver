@@ -12,7 +12,7 @@ namespace websocket_trackersDriver {
     class TrackerDevice : public IVRDevice {
         public:
 
-            TrackerDevice(std::string serial);
+            TrackerDevice(std::string serial, int deviceId, std::string role);
             ~TrackerDevice() = default;
 
             // Inherited via IVRDevice
@@ -27,10 +27,14 @@ namespace websocket_trackersDriver {
             virtual void* GetComponent(const char* pchComponentNameAndVersion) override;
             virtual void DebugRequest(const char* pchRequest, char* pchResponseBuffer, uint32_t unResponseBufferSize) override;
             virtual vr::DriverPose_t GetPose() override;
+            virtual int getDeviceId();
 
     private:
         vr::TrackedDeviceIndex_t device_index_ = vr::k_unTrackedDeviceIndexInvalid;
         std::string serial_;
+        std::string role_;
+        int deviceId_;
+        bool isSetup;
 
         vr::DriverPose_t last_pose_ = IVRDevice::MakeDefaultPose();
 
