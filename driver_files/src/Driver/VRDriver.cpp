@@ -5300,7 +5300,10 @@ void websocket_trackersDriver::VRDriver::RunFrame() {
 				}
 
 				if (device_index == total_devices) {
-					this->AddDevice(std::make_shared<TrackerDevice>(device_name));
+
+					std::string trackerRole = "TrackerRole_Waist";
+					int device_id_cur = 1;
+					this->AddDevice(std::make_shared<TrackerDevice>(device_name, device_id_cur, trackerRole));
 					this->device_names.push_back(device_name);
 				}
 
@@ -5330,7 +5333,7 @@ void websocket_trackersDriver::VRDriver::RunFrame() {
 						is_active = pose.deviceIsConnected;
 					}
 				}
-				pose.deviceIsConnected = is_active;
+				pose.deviceIsConnected = true;
 
 				double x = pose.vecPosition[0];
 				try {
@@ -5503,8 +5506,7 @@ void websocket_trackersDriver::VRDriver::RunFrame() {
 
 	const int max_devices = 10;
 	vr::TrackedDevicePose_t device_poses[max_devices];
-	vr::VRServerDriverHost()->GetRawTrackedDevicePoses(0, device_poses,
-		max_devices);
+	vr::VRServerDriverHost()->GetRawTrackedDevicePoses(0, device_poses,max_devices);
 	std::string device_positions = "";
 	int total_devices = 0;
 	for (int i = 0; i < max_devices; i++) {
